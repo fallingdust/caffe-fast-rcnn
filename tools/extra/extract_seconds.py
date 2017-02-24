@@ -38,6 +38,10 @@ def get_start_time(line_iterable, year):
         if line.find('Solving') != -1:
             start_datetime = extract_datetime_from_line(line, year)
             break
+        if line.find('Solving...') != -1:
+            line = next(line_iterable)
+            start_datetime = extract_datetime_from_line(line, year)
+            break
     return start_datetime
 
 
