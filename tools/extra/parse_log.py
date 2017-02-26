@@ -49,6 +49,9 @@ def parse_log(path_to_log):
                 # iteration
                 continue
 
+            if line.strip() == '':
+                continue
+
             try:
                 time = extract_seconds.extract_datetime_from_line(line,
                                                                   logfile_year)
