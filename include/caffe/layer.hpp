@@ -291,7 +291,6 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
-  inline Phase phase() { return phase_; }
 
  protected:
   /** The protobuf that stores the layer parameters */
