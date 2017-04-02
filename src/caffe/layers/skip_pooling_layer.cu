@@ -21,8 +21,9 @@ __global__ void SkipPoolForward(const int nthreads,
     int wstart = pw * 2;
     const Dtype* const bottom_slice =
         bottom_data + (n * channels + c / 4) * height * width;
-    int bottom_index = (hstart + c % 4 / 2) * width + wstart + c % 4 % 2;
-    top_data[index] = bottom_index > height * width ? Dtype(0) : bottom_slice[bottom_index];
+    int h_index = hstart + c % 4 / 2;
+    int w_index = wstart + c % 4 % 2;
+    top_data[index] = (h_index >= height || w_index >= width) ? Dtype(0) : bottom_slice[h_index * width + w_index];
   }
 }
 
