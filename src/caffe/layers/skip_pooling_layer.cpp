@@ -43,16 +43,16 @@ void SkipPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         for (int pw = 0; pw < pooled_width_; ++pw) {
           int hstart = ph * 2;
           int wstart = pw * 2;
-          int hend = min(hstart + 2, height_);
-          int wend = min(wstart + 2, width_);
-          hstart = max(hstart, 0);
-          wstart = max(wstart, 0);
+          int hend = hstart + 2;
+          int wend = wstart + 2;
           const int pool_index = ph * pooled_width_ + pw;
           int channel_offset = 0;
           for (int h = hstart; h < hend; ++h) {
             for (int w = wstart; w < wend; ++w) {
-              const int index = h * width_ + w;
-              top_data[pool_index + channel_offset] = bottom_data[index];
+              if (h < height_ && w < width_) {
+                const int index = h * width_ + w;
+                top_data[pool_index + channel_offset] = bottom_data[index];
+              }
               channel_offset += top[0]->offset(0, 1);
             }
           }
