@@ -76,5 +76,6 @@ STUB_GPU(SkipPoolingLayer);
 #endif
 
 INSTANTIATE_CLASS(SkipPoolingLayer);
+REGISTER_LAYER_CLASS(SkipPooling);
 
 }  // namespace caffe
