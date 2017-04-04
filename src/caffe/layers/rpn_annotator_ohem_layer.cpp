@@ -37,12 +37,12 @@ namespace caffe {
     width_ = bottom[0]->width();
     spatial_dim_ = height_*width_;
 
-    CHECK_EQ(bottom[1]->num(), 1);
+    CHECK_EQ(bottom[1]->num(), num_);
     CHECK_EQ(bottom[1]->channels(), 1);
     CHECK_EQ(bottom[1]->height(), height_);
     CHECK_EQ(bottom[1]->width(), width_);
 
-    CHECK_EQ(bottom[2]->num(), 1);
+    CHECK_EQ(bottom[2]->num(), num_);
     CHECK_EQ(bottom[1]->channels(), 4);
     CHECK_EQ(bottom[2]->height(), height_);
     CHECK_EQ(bottom[2]->width(), width_);
