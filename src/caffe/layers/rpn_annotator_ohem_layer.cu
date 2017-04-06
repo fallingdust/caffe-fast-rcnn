@@ -38,6 +38,9 @@ namespace caffe {
       int index = sorted_idx[i];
       int s = index % (width_*height_);
       int n = index / (width_*height_);
+      if (bottom_labels[index] == ignore_label_) {
+        continue;
+      }
       if (number_left > 0) {
         number_left--;
         top_labels[index] = bottom_labels[index];
