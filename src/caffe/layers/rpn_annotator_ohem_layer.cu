@@ -34,27 +34,30 @@ namespace caffe {
 
     // Generate output labels for scoring and loss_weights for bbox regression
     int number_pos_left = int(rpn_per_img_ * fg_fraction_ + 0.5);
-    int number_neg_left = rpn_per_img_ - number_pos_left;
     for (int i = 0; i < num_rpns_; i++) {
       int index = sorted_idx[i];
-      int s = index % (width_*height_);
-      int n = index / (width_*height_);
-      if (bottom_labels[index] == ignore_label_) {
-        continue;
-      } else if (bottom_labels[index] == positive_label_) {
+      if (bottom_labels[index] == positive_label_) {
         if (number_pos_left > 0) {
           number_pos_left--;
           top_labels[index] = bottom_labels[index];
+          int s = index % (width_*height_);
+          int n = index / (width_*height_);
           for (int j = 0; j < 4; j++) {
             int bbox_index = (n*4+j)*spatial_dim_+s;
-            top_bbox_loss_weights[bbox_index] =
-                bottom_bbox_loss_weights[bbox_index];
+            top_bbox_loss_weights[bbox_index] = bottom_bbox_loss_weights[bbox_index];
           }
         }
-      } else if (bottom_labels[index] == negative_label_) {
+      }
+    }
+    int number_neg_left = rpn_per_img_ - int(rpn_per_img_ * fg_fraction_ + 0.5) + number_pos_left;
+    for (int i = 0; i < num_rpns_; i++) {
+      int index = sorted_idx[i];
+      if (bottom_labels[index] == negative_label_) {
         if (number_neg_left > 0) {
           number_neg_left--;
           top_labels[index] = bottom_labels[index];
+          int s = index % (width_*height_);
+          int n = index / (width_*height_);
           for (int j = 0; j < 4; j++) {
             int bbox_index = (n*4+j)*spatial_dim_+s;
             top_bbox_loss_weights[bbox_index] =
