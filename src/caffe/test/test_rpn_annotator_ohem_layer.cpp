@@ -45,8 +45,8 @@ class RpnAnnotatorOHEMLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 
   void TestForward() {
-    blob_bottom_a_->mutable_cpu_data()[0] = 0.1;
-    blob_bottom_a_->mutable_cpu_data()[1] = 0.3;
+    blob_bottom_a_->mutable_cpu_data()[0] = 0.3;
+    blob_bottom_a_->mutable_cpu_data()[1] = 0.1;
     blob_bottom_a_->mutable_cpu_data()[2] = 0.5;
     blob_bottom_a_->mutable_cpu_data()[3] = 0.2;
     blob_bottom_a_->mutable_cpu_data()[4] = 0.4;
@@ -81,7 +81,10 @@ class RpnAnnotatorOHEMLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter layer_param;
     RpnAnnotatorOHEMParameter* rpn_annotator_ohem_param = layer_param.mutable_rpn_annotator_ohem_param();
     rpn_annotator_ohem_param->set_ignore_label(-1);
+    rpn_annotator_ohem_param->set_positive_label(1);
+    rpn_annotator_ohem_param->set_negative_label(0);
     rpn_annotator_ohem_param->set_rpn_per_img(2);
+    rpn_annotator_ohem_param->set_fg_fraction(0.5);
     RpnAnnotatorOHEMLayer<Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
@@ -122,7 +125,11 @@ TYPED_TEST(RpnAnnotatorOHEMLayerTest, TestSetup) {
   LayerParameter layer_param;
   RpnAnnotatorOHEMParameter* rpn_annotator_ohem_param = layer_param.mutable_rpn_annotator_ohem_param();
   rpn_annotator_ohem_param->set_ignore_label(-1);
+  rpn_annotator_ohem_param->set_positive_label(1);
+  rpn_annotator_ohem_param->set_negative_label(0);
   rpn_annotator_ohem_param->set_rpn_per_img(2);
+  rpn_annotator_ohem_param->set_fg_fraction(0.5);
+
   RpnAnnotatorOHEMLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

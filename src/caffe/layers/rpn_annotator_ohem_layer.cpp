@@ -25,7 +25,10 @@ namespace caffe {
       this->layer_param_.rpn_annotator_ohem_param();
     rpn_per_img_ = rpn_anno_param.rpn_per_img();
     CHECK_GT(rpn_per_img_, 0);
+    fg_fraction_ = rpn_anno_param.fg_fraction();
     ignore_label_ = rpn_anno_param.ignore_label();
+    positive_label_ = rpn_anno_param.positive_label();
+    negative_label_ = rpn_anno_param.negative_label();
   }
 
   template <typename Dtype>
@@ -77,21 +80,33 @@ namespace caffe {
               });
 
     // Generate output labels for scoring and loss_weights for bbox regression
-    int number_left = rpn_per_img_;
+    int number_pos_left = int(rpn_per_img_ * fg_fraction_ + 0.5);
+    int number_neg_left = rpn_per_img_ - number_pos_left;
     for (int i = 0; i < num_rpns_; i++) {
       int index = sorted_idx[i];
       int s = index % (width_*height_);
       int n = index / (width_*height_);
       if (bottom_labels[index] == ignore_label_) {
         continue;
-      }
-      if (number_left > 0) {
-        number_left--;
-        top_labels[index] = bottom_labels[index];
-        for (int j = 0; j < 4; j++) {
-          int bbox_index = (n*4+j)*spatial_dim_+s;
-          top_bbox_loss_weights[bbox_index] =
-              bottom_bbox_loss_weights[bbox_index];
+      } else if (bottom_labels[index] == positive_label_) {
+        if (number_pos_left > 0) {
+          number_pos_left--;
+          top_labels[index] = bottom_labels[index];
+          for (int j = 0; j < 4; j++) {
+            int bbox_index = (n*4+j)*spatial_dim_+s;
+            top_bbox_loss_weights[bbox_index] =
+                bottom_bbox_loss_weights[bbox_index];
+          }
+        }
+      } else if (bottom_labels[index] == negative_label_) {
+        if (number_neg_left > 0) {
+          number_neg_left--;
+          top_labels[index] = bottom_labels[index];
+          for (int j = 0; j < 4; j++) {
+            int bbox_index = (n*4+j)*spatial_dim_+s;
+            top_bbox_loss_weights[bbox_index] =
+                bottom_bbox_loss_weights[bbox_index];
+          }
         }
       }
     }

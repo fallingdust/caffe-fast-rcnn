@@ -1096,7 +1096,10 @@ message ROIPoolingParameter {
 
 message RpnAnnotatorOHEMParameter {
   required uint32 rpn_per_img = 1; // number of rpns for training
-  optional int32 ignore_label = 2 [default = -1]; // ignore_label in scoring
+  required float fg_fraction = 2; // max number of foreground examples
+  optional int32 ignore_label = 3 [default = -1]; // ignore_label in scoring
+  optional int32 positive_label = 4 [default = 1]; // positive_label in scoring
+  optional int32 negative_label = 5 [default = 0]; // negative_label in scoring
 }
 
 message ScaleParameter {

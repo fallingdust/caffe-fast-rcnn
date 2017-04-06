@@ -46,7 +46,10 @@ namespace caffe {
     int spatial_dim_;
 
     int rpn_per_img_;
+    float fg_fraction_;
     int ignore_label_;
+    int positive_label_;
+    int negative_label_;
   };
 
 }  // namespace caffe
