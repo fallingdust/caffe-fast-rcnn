@@ -4,7 +4,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/normalize_layer.hpp"
 #include "caffe/filler.hpp"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
