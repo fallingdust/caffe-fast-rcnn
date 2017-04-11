@@ -227,26 +227,28 @@ TYPED_TEST(NormalizeLayerTest, TestForwardEltWiseScaleChannel) {
   }
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradient) {
+TYPED_TEST(NormalizeLayerTest, TestGradientDynamic) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
+  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+  norm_param->set_fix_scale(false);
   NormalizeLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradientScale) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
-  norm_param->mutable_scale_filler()->set_type("constant");
-  norm_param->mutable_scale_filler()->set_value(3);
-  NormalizeLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
-}
+//TYPED_TEST(NormalizeLayerTest, TestGradientScale) {
+//  typedef typename TypeParam::Dtype Dtype;
+//  LayerParameter layer_param;
+//  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+//  norm_param->mutable_scale_filler()->set_type("constant");
+//  norm_param->mutable_scale_filler()->set_value(3);
+//  NormalizeLayer<Dtype> layer(layer_param);
+//  GradientChecker<Dtype> checker(1e-2, 1e-3);
+//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+//      this->blob_top_vec_);
+//}
 
 TYPED_TEST(NormalizeLayerTest, TestGradientScaleDynamic) {
   typedef typename TypeParam::Dtype Dtype;
@@ -261,18 +263,18 @@ TYPED_TEST(NormalizeLayerTest, TestGradientScaleDynamic) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradientScaleChannel) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
-  norm_param->set_channel_shared(false);
-  norm_param->mutable_scale_filler()->set_type("constant");
-  norm_param->mutable_scale_filler()->set_value(3);
-  NormalizeLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
-}
+//TYPED_TEST(NormalizeLayerTest, TestGradientScaleChannel) {
+//  typedef typename TypeParam::Dtype Dtype;
+//  LayerParameter layer_param;
+//  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+//  norm_param->set_channel_shared(false);
+//  norm_param->mutable_scale_filler()->set_type("constant");
+//  norm_param->mutable_scale_filler()->set_value(3);
+//  NormalizeLayer<Dtype> layer(layer_param);
+//  GradientChecker<Dtype> checker(1e-2, 1e-3);
+//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+//      this->blob_top_vec_);
+//}
 
 TYPED_TEST(NormalizeLayerTest, TestGradientScaleChannelDynamic) {
   typedef typename TypeParam::Dtype Dtype;
@@ -288,10 +290,11 @@ TYPED_TEST(NormalizeLayerTest, TestGradientScaleChannelDynamic) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradientEltWise) {
+TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseDynamic) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+  norm_param->set_fix_scale(false);
   norm_param->set_across_spatial(false);
   NormalizeLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-3, 1e-3);
@@ -299,18 +302,18 @@ TYPED_TEST(NormalizeLayerTest, TestGradientEltWise) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScale) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
-  norm_param->set_across_spatial(false);
-  norm_param->mutable_scale_filler()->set_type("constant");
-  norm_param->mutable_scale_filler()->set_value(3);
-  NormalizeLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-3, 2e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
-}
+//TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScale) {
+//  typedef typename TypeParam::Dtype Dtype;
+//  LayerParameter layer_param;
+//  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+//  norm_param->set_across_spatial(false);
+//  norm_param->mutable_scale_filler()->set_type("constant");
+//  norm_param->mutable_scale_filler()->set_value(3);
+//  NormalizeLayer<Dtype> layer(layer_param);
+//  GradientChecker<Dtype> checker(1e-3, 2e-3);
+//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+//      this->blob_top_vec_);
+//}
 
 TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScaleDynamic) {
   typedef typename TypeParam::Dtype Dtype;
@@ -326,19 +329,19 @@ TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScaleDynamic) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScaleChannel) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
-  norm_param->set_across_spatial(false);
-  norm_param->set_channel_shared(false);
-  norm_param->mutable_scale_filler()->set_type("constant");
-  norm_param->mutable_scale_filler()->set_value(3);
-  NormalizeLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-3, 2e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
-}
+//TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScaleChannel) {
+//  typedef typename TypeParam::Dtype Dtype;
+//  LayerParameter layer_param;
+//  NormalizeParameter* norm_param = layer_param.mutable_norm_param();
+//  norm_param->set_across_spatial(false);
+//  norm_param->set_channel_shared(false);
+//  norm_param->mutable_scale_filler()->set_type("constant");
+//  norm_param->mutable_scale_filler()->set_value(3);
+//  NormalizeLayer<Dtype> layer(layer_param);
+//  GradientChecker<Dtype> checker(1e-3, 2e-3);
+//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+//      this->blob_top_vec_);
+//}
 
 TYPED_TEST(NormalizeLayerTest, TestGradientEltWiseScaleChannelDynamic) {
   typedef typename TypeParam::Dtype Dtype;
