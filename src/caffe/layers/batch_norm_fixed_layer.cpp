@@ -111,21 +111,33 @@ void BatchNormFixedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_powx(variance_.count(), variance_.cpu_data(), Dtype(0.5),
              variance_.mutable_cpu_data());
 
+  Blob<Dtype> temp(bottom[0]->shape());
   // replicate variance to input size
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
       batch_sum_multiplier_.cpu_data(), variance_.cpu_data(), 0.,
       num_by_chans_.mutable_cpu_data());
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, 1., num_by_chans_.cpu_data(),
-      spatial_sum_multiplier_.cpu_data(), 0., bottom[0]->mutable_cpu_diff());
-  caffe_div(bottom[0]->count(), top_data, bottom[0]->cpu_diff(), top_data);
+      spatial_sum_multiplier_.cpu_data(), 0., temp.mutable_cpu_data());
+  caffe_div(temp.count(), top_data, temp.cpu_data(), top_data);
 }
 
 template <typename Dtype>
 void BatchNormFixedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  caffe_div(bottom[0]->count(), top[0]->cpu_diff(), bottom[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
+  int num = bottom[0]->shape(0);
+  int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
+
+  Blob<Dtype> temp(bottom[0]->shape());
+  // replicate variance to input size
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
+                        batch_sum_multiplier_.cpu_data(), variance_.cpu_data(), 0.,
+                        num_by_chans_.mutable_cpu_data());
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
+                        spatial_dim, 1, 1., num_by_chans_.cpu_data(),
+                        spatial_sum_multiplier_.cpu_data(), 0., temp.mutable_cpu_data());
+  caffe_div(bottom[0]->count(), top[0]->cpu_diff(), temp.cpu_data(), bottom[0]->mutable_cpu_diff());
 }
 
 
