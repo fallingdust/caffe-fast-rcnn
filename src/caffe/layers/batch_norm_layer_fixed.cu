@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layers/batch_norm_layer.hpp"
+#include "caffe/layers/batch_norm_fixed_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void BatchNormFixedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -50,13 +50,13 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void BatchNormFixedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   caffe_gpu_div(bottom[0]->count(), top[0]->gpu_diff(), bottom[0]->gpu_diff(), bottom[0]->mutable_gpu_diff());
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BatchNormLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(BatchNormFixedLayer);
 
 
 }  // namespace caffe
