@@ -197,7 +197,6 @@ namespace caffe {
     vector<bool> propagate_down(blob_bottom_vec.size(), true);
     Blob<Dtype> temp(blob_inplace.shape());
     caffe_copy(temp.count(), blob_inplace.cpu_diff(), temp.mutable_cpu_diff());
-    const Dtype* diff = blob_top_vec[0]->cpu_diff();
     layer.Backward(blob_top_vec, propagate_down, blob_bottom_vec);
 
     int num = blob_inplace.num();
