@@ -14,17 +14,7 @@ void ScaleFixedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   }
-  if (param.bias_term()) {
-    LayerParameter layer_param(this->layer_param_);
-    layer_param.set_type("Bias");
-    BiasParameter* bias_param = layer_param.mutable_bias_param();
-    bias_param->set_axis(param.axis());
-    bias_param->set_num_axes(param.num_axes());
-    bias_param->mutable_filler()->CopyFrom(param.bias_filler());
-    bias_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
-    bias_layer_->SetUp(bottom, top);
-    bias_layer_->blobs()[0] = this->blobs_[this->blobs_.size() - 1];
-  }
+  has_bias_ = param.bias_term();
 }
 
 template <typename Dtype>
@@ -54,9 +44,6 @@ void ScaleFixedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (bottom[0] != top[0]) {
     top[0]->ReshapeLike(*bottom[0]);
   }
-  if (bias_layer_) {
-    bias_layer_->Reshape(bottom, top);
-  }
 }
 
 template <typename Dtype>
@@ -64,18 +51,19 @@ void ScaleFixedLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* scale_data = this->blobs_[0].get()->cpu_data();
+  const Dtype* bias_data = has_bias_ ? this->blobs_[1].get()->cpu_data() : nullptr;
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int n = 0; n < outer_dim_; ++n) {
     for (int d = 0; d < scale_dim_; ++d) {
       const Dtype factor = scale_data[d];
       caffe_cpu_scale(inner_dim_, factor, bottom_data, top_data);
+      if (has_bias_) {
+        const Dtype bias = bias_data[d];
+        caffe_add_scalar(inner_dim_, bias, top_data);
+      }
       bottom_data += inner_dim_;
       top_data += inner_dim_;
     }
-  }
-  if (bias_layer_) {
-    vector<Blob<Dtype>*> bias_bottom_vec(1, top[0]);
-    bias_layer_->Forward(bias_bottom_vec, top);
   }
 }
 

@@ -36,7 +36,7 @@ class ScaleFixedLayer: public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  shared_ptr<Layer<Dtype> > bias_layer_;
+  bool has_bias_;
 
   int axis_;
   int outer_dim_, scale_dim_, inner_dim_;
