@@ -34,7 +34,7 @@ void ScaleFixedLayer<Dtype>::Forward_gpu(
   const Dtype* scale_data = this->blobs_[0].get()->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   if (bias_layer_) {
-    const Dtype* bias_data = this->blobs_[bias_param_id_]->gpu_data();
+    const Dtype* bias_data = this->blobs_[this->blobs_.size() - 1]->gpu_data();
     ScaleBiasForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
         <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, scale_data, bias_data, scale_dim_, inner_dim_,
