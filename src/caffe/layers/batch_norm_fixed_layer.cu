@@ -58,10 +58,6 @@ void BatchNormFixedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
 
   Blob<Dtype> temp(bottom[0]->shape());
-  // replicate variance to input size
-  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-      batch_sum_multiplier_.gpu_data(), variance_.gpu_data(), 0.,
-      num_by_chans_.mutable_gpu_data());
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, 1., num_by_chans_.gpu_data(),
       spatial_sum_multiplier_.gpu_data(), 0., temp.mutable_gpu_data());

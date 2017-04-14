@@ -130,10 +130,6 @@ void BatchNormFixedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
 
   Blob<Dtype> temp(bottom[0]->shape());
-  // replicate variance to input size
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-                        batch_sum_multiplier_.cpu_data(), variance_.cpu_data(), 0.,
-                        num_by_chans_.mutable_cpu_data());
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
                         spatial_dim, 1, 1., num_by_chans_.cpu_data(),
                         spatial_sum_multiplier_.cpu_data(), 0., temp.mutable_cpu_data());
