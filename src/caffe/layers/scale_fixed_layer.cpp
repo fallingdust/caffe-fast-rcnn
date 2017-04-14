@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/filler.hpp"
-#include "caffe/layer_factory.hpp"
 #include "caffe/layers/scale_fixed_layer.hpp"
 
 namespace caffe {
@@ -11,10 +9,27 @@ template <typename Dtype>
 void ScaleFixedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const ScaleParameter& param = this->layer_param_.scale_param();
-  if (this->blobs_.size() > 0) {
-    LOG(INFO) << "Skipping parameter initialization";
+  // scale is a learned parameter; initialize it
+  axis_ = bottom[0]->CanonicalAxisIndex(param.axis());
+  const int num_axes = param.num_axes();
+  CHECK_GE(num_axes, -1) << "num_axes must be non-negative, "
+                         << "or -1 to extend to the end of bottom[0]";
+  if (num_axes >= 0) {
+    CHECK_GE(bottom[0]->num_axes(), axis_ + num_axes)
+      << "scale blob's shape extends past bottom[0]'s shape when applied "
+      << "starting with bottom[0] axis = " << axis_;
   }
   has_bias_ = param.bias_term();
+  this->blobs_.resize(has_bias_ ? 2 : 1);
+  const vector<int>::const_iterator& shape_start =
+      bottom[0]->shape().begin() + axis_;
+  const vector<int>::const_iterator& shape_end =
+      (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
+  vector<int> scale_shape(shape_start, shape_end);
+  this->blobs_[0].reset(new Blob<Dtype>(scale_shape));
+  if (has_bias_) {
+    this->blobs_[1].reset(new Blob<Dtype>(scale_shape));
+  }
 }
 
 template <typename Dtype>
