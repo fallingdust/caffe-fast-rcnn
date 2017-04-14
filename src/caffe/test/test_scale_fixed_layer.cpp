@@ -47,20 +47,20 @@ TYPED_TEST(ScaleFixedLayerTest, TestForward) {
   LayerParameter layer_param;
   ScaleParameter* param = layer_param.mutable_scale_param();
   param->set_bias_term(true);
-  shared_ptr<ScaleFixedLayer<Dtype> > layer(new ScaleFixedLayer<Dtype>(layer_param));
-  layer->blobs().resize(2);
+  ScaleFixedLayer<Dtype> layer(layer_param);
+  layer.blobs().resize(2);
   vector<int> sz;
   sz.push_back(this->blob_bottom_->shape(1));
-  layer->blobs()[0].reset(new Blob<Dtype>(sz));
-  layer->blobs()[1].reset(new Blob<Dtype>(sz));
-  caffe_set(layer->blobs()[0]->count(), Dtype(2.), layer->blobs()[0]->mutable_cpu_data());
-  caffe_set(layer->blobs()[1]->count(), Dtype(1.), layer->blobs()[1]->mutable_cpu_data());
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.blobs()[0].reset(new Blob<Dtype>(sz));
+  layer.blobs()[1].reset(new Blob<Dtype>(sz));
+  caffe_set(layer.blobs()[0]->count(), Dtype(2.), layer.blobs()[0]->mutable_cpu_data());
+  caffe_set(layer.blobs()[1]->count(), Dtype(1.), layer.blobs()[1]->mutable_cpu_data());
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
-  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
-    const Dtype scale = layer->blobs()[0]->cpu_data()[c];
-    const Dtype bias = layer->blobs()[1]->cpu_data()[c];
+    const Dtype scale = layer.blobs()[0]->cpu_data()[c];
+    const Dtype bias = layer.blobs()[1]->cpu_data()[c];
     for (int n = 0; n < this->blob_bottom_->num(); ++n) {
       for (int h = 0; h < this->blob_bottom_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_->width(); ++w) {
@@ -88,22 +88,22 @@ TYPED_TEST(ScaleFixedLayerTest, TestForwardInplace) {
   LayerParameter layer_param;
   ScaleParameter* param = layer_param.mutable_scale_param();
   param->set_bias_term(true);
-  shared_ptr<ScaleFixedLayer<Dtype> > layer(new ScaleFixedLayer<Dtype>(layer_param));
+  ScaleFixedLayer<Dtype> layer(layer_param);
 
-  layer->blobs().resize(2);
+  layer.blobs().resize(2);
   vector<int> sz;
   sz.push_back(blob_inplace.shape(1));
-  layer->blobs()[0].reset(new Blob<Dtype>(sz));
-  layer->blobs()[1].reset(new Blob<Dtype>(sz));
-  caffe_set(layer->blobs()[0]->count(), Dtype(2.), layer->blobs()[0]->mutable_cpu_data());
-  caffe_set(layer->blobs()[1]->count(), Dtype(1.), layer->blobs()[1]->mutable_cpu_data());
-  layer->SetUp(blob_bottom_vec, blob_top_vec);
+  layer.blobs()[0].reset(new Blob<Dtype>(sz));
+  layer.blobs()[1].reset(new Blob<Dtype>(sz));
+  caffe_set(layer.blobs()[0]->count(), Dtype(2.), layer.blobs()[0]->mutable_cpu_data());
+  caffe_set(layer.blobs()[1]->count(), Dtype(1.), layer.blobs()[1]->mutable_cpu_data());
+  layer.SetUp(blob_bottom_vec, blob_top_vec);
   Blob<Dtype> temp(blob_inplace.shape());
   caffe_copy(temp.count(), blob_inplace.cpu_data(), temp.mutable_cpu_data());
-  layer->Forward(blob_bottom_vec, blob_top_vec);
+  layer.Forward(blob_bottom_vec, blob_top_vec);
   for (int c = 0; c < blob_inplace.channels(); ++c) {
-    const Dtype scale = layer->blobs()[0]->cpu_data()[c];
-    const Dtype bias = layer->blobs()[1]->cpu_data()[c];
+    const Dtype scale = layer.blobs()[0]->cpu_data()[c];
+    const Dtype bias = layer.blobs()[1]->cpu_data()[c];
     for (int n = 0; n < blob_inplace.num(); ++n) {
       for (int h = 0; h < blob_inplace.height(); ++h) {
         for (int w = 0; w < blob_inplace.width(); ++w) {
@@ -121,24 +121,24 @@ TYPED_TEST(ScaleFixedLayerTest, TestBackward) {
   LayerParameter layer_param;
   ScaleParameter* param = layer_param.mutable_scale_param();
   param->set_bias_term(true);
-  shared_ptr<ScaleFixedLayer<Dtype> > layer(new ScaleFixedLayer<Dtype>(layer_param));
-  layer->blobs().resize(2);
+  ScaleFixedLayer<Dtype> layer(layer_param);
+  layer.blobs().resize(2);
   vector<int> sz;
   sz.push_back(this->blob_bottom_->shape(1));
-  layer->blobs()[0].reset(new Blob<Dtype>(sz));
-  layer->blobs()[1].reset(new Blob<Dtype>(sz));
-  caffe_set(layer->blobs()[0]->count(), Dtype(2.), layer->blobs()[0]->mutable_cpu_data());
-  caffe_set(layer->blobs()[1]->count(), Dtype(1.), layer->blobs()[1]->mutable_cpu_data());
+  layer.blobs()[0].reset(new Blob<Dtype>(sz));
+  layer.blobs()[1].reset(new Blob<Dtype>(sz));
+  caffe_set(layer.blobs()[0]->count(), Dtype(2.), layer.blobs()[0]->mutable_cpu_data());
+  caffe_set(layer.blobs()[1]->count(), Dtype(1.), layer.blobs()[1]->mutable_cpu_data());
 
 
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   caffe_set(this->blob_top_->count(), Dtype(1.), this->blob_top_->mutable_cpu_diff());
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
-  layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  layer.Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 
   for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
-    const Dtype scale = layer->blobs()[0]->cpu_data()[c];
+    const Dtype scale = layer.blobs()[0]->cpu_data()[c];
     for (int n = 0; n < this->blob_bottom_->num(); ++n) {
       for (int h = 0; h < this->blob_bottom_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_->width(); ++w) {
@@ -166,25 +166,25 @@ TYPED_TEST(ScaleFixedLayerTest, TestBackwardInplace) {
   LayerParameter layer_param;
   ScaleParameter* param = layer_param.mutable_scale_param();
   param->set_bias_term(true);
-  shared_ptr<ScaleFixedLayer<Dtype> > layer(new ScaleFixedLayer<Dtype>(layer_param));
-  layer->blobs().resize(2);
+  ScaleFixedLayer<Dtype> layer(layer_param);
+  layer.blobs().resize(2);
   vector<int> sz;
   sz.push_back(blob_inplace.shape(1));
-  layer->blobs()[0].reset(new Blob<Dtype>(sz));
-  layer->blobs()[1].reset(new Blob<Dtype>(sz));
-  caffe_set(layer->blobs()[0]->count(), Dtype(2.), layer->blobs()[0]->mutable_cpu_data());
-  caffe_set(layer->blobs()[1]->count(), Dtype(1.), layer->blobs()[1]->mutable_cpu_data());
+  layer.blobs()[0].reset(new Blob<Dtype>(sz));
+  layer.blobs()[1].reset(new Blob<Dtype>(sz));
+  caffe_set(layer.blobs()[0]->count(), Dtype(2.), layer.blobs()[0]->mutable_cpu_data());
+  caffe_set(layer.blobs()[1]->count(), Dtype(1.), layer.blobs()[1]->mutable_cpu_data());
 
-  layer->SetUp(blob_bottom_vec, blob_top_vec);
-  layer->Forward(blob_bottom_vec, blob_top_vec);
+  layer.SetUp(blob_bottom_vec, blob_top_vec);
+  layer.Forward(blob_bottom_vec, blob_top_vec);
   caffe_set(blob_inplace.count(), Dtype(1.), blob_inplace.mutable_cpu_diff());
   vector<bool> propagate_down(blob_bottom_vec.size(), true);
   Blob<Dtype> temp(blob_inplace.shape());
   caffe_copy(temp.count(), blob_inplace.cpu_diff(), temp.mutable_cpu_diff());
-  layer->Backward(blob_top_vec, propagate_down, blob_bottom_vec);
+  layer.Backward(blob_top_vec, propagate_down, blob_bottom_vec);
 
   for (int c = 0; c < blob_inplace.channels(); ++c) {
-    const Dtype scale = layer->blobs()[0]->cpu_data()[c];
+    const Dtype scale = layer.blobs()[0]->cpu_data()[c];
     for (int n = 0; n < blob_inplace.num(); ++n) {
       for (int h = 0; h < blob_inplace.height(); ++h) {
         for (int w = 0; w < blob_inplace.width(); ++w) {
