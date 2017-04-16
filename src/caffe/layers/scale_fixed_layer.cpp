@@ -30,6 +30,16 @@ void ScaleFixedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (has_bias_) {
     this->blobs_[1].reset(new Blob<Dtype>(scale_shape));
   }
+  // Fix scale and bias.
+  for (int i = 0; i < this->blobs_.size(); ++i) {
+    if (this->layer_param_.param_size() == i) {
+      ParamSpec* fixed_param_spec = this->layer_param_.add_param();
+      fixed_param_spec->set_lr_mult(0.f);
+    } else {
+      CHECK_EQ(this->layer_param_.param(i).lr_mult(), 0.f)
+        << "Cannot configure learning rate for scale fixed layer.";
+    }
+  }
 }
 
 template <typename Dtype>
