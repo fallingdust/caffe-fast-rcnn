@@ -40,7 +40,7 @@ void UpscaleLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 
 template <typename Dtype>
-void UpscaleingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void UpscaleLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 }
 
