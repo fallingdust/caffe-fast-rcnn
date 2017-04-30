@@ -25,7 +25,7 @@ __global__ void UpscaleForward(const int nthreads,
 
 
 template <typename Dtype>
-void UpscaleingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void UpscaleLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -45,7 +45,7 @@ void UpscaleingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_LAYER_GPU_FUNCS(UpscaleingLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(UpscaleLayer);
 
 
 }  // namespace caffe
