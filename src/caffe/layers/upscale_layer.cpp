@@ -16,9 +16,7 @@ void UpscaleLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void UpscaleLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  upscale_height_ = bottom[1]->height();
-  upscale_width_ = bottom[1]->width();
-  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), upscale_height_, upscale_width_);
+  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), bottom[1]->height(), bottom[1]->width());
 }
 
 template <typename Dtype>
