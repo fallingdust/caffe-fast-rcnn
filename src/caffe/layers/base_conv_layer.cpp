@@ -191,27 +191,39 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   num_ = bottom[0]->count(0, channel_axis_);
   CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
       << "Input size incompatible with convolution kernel.";
-  // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
-    CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
-        << "All inputs must have the same shape.";
+    CHECK(bottom[0]->shape(0) == bottom[bottom_id]->shape(0))
+        << "All inputs must have the same num.";
+    CHECK(bottom[0]->shape(1) == bottom[bottom_id]->shape(1))
+        << "All inputs must have the same channel.";
   }
   // Shape the tops.
-  bottom_shape_ = &bottom[0]->shape();
-  compute_output_shape();
-  vector<int> top_shape(bottom[0]->shape().begin(),
-      bottom[0]->shape().begin() + channel_axis_);
-  top_shape.push_back(num_output_);
-  for (int i = 0; i < num_spatial_axes_; ++i) {
-    top_shape.push_back(output_shape_[i]);
-  }
   for (int top_id = 0; top_id < top.size(); ++top_id) {
+    bottom_shape_ = &bottom[top_id]->shape();
+    compute_output_shape();
+    vector<int> top_shape(bottom[top_id]->shape().begin(),
+                          bottom[top_id]->shape().begin() + channel_axis_);
+    top_shape.push_back(num_output_);
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      top_shape.push_back(output_shape_[i]);
+    }
     top[top_id]->Reshape(top_shape);
   }
+
+  reshape_variables(bottom[0], top[0]);
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::reshape_variables(const Blob<Dtype>* bottom, const Blob<Dtype>* top) {
+  const int first_spatial_axis = channel_axis_ + 1;
+
+  bottom_shape_ = &bottom->shape();
+  compute_output_shape();
+
   if (reverse_dimensions()) {
-    conv_out_spatial_dim_ = bottom[0]->count(first_spatial_axis);
+    conv_out_spatial_dim_ = bottom->count(first_spatial_axis);
   } else {
-    conv_out_spatial_dim_ = top[0]->count(first_spatial_axis);
+    conv_out_spatial_dim_ = top->count(first_spatial_axis);
   }
   col_offset_ = kernel_dim_ * conv_out_spatial_dim_;
   output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
@@ -221,9 +233,9 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
   for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
     if (reverse_dimensions()) {
-      conv_input_shape_data[i] = top[0]->shape(channel_axis_ + i);
+      conv_input_shape_data[i] = top->shape(channel_axis_ + i);
     } else {
-      conv_input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
+      conv_input_shape_data[i] = bottom->shape(channel_axis_ + i);
     }
   }
   // The im2col result buffer will only hold one image at a time to avoid
@@ -239,12 +251,12 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   col_buffer_.Reshape(col_buffer_shape_);
-  bottom_dim_ = bottom[0]->count(channel_axis_);
-  top_dim_ = top[0]->count(channel_axis_);
+  bottom_dim_ = bottom->count(channel_axis_);
+  top_dim_ = top->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
   num_kernels_col2im_ = reverse_dimensions() ? top_dim_ : bottom_dim_;
   // Set up the all ones "bias multiplier" for adding biases by BLAS
-  out_spatial_dim_ = top[0]->count(first_spatial_axis);
+  out_spatial_dim_ = top->count(first_spatial_axis);
   if (bias_term_) {
     vector<int> bias_multiplier_shape(1, out_spatial_dim_);
     bias_multiplier_.Reshape(bias_multiplier_shape);
