@@ -64,6 +64,7 @@ void UpscaleLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   int count = top[0]->count();
+  caffe_gpu_set(count, Dtype(0.), bottom_diff);
   // NOLINT_NEXT_LINE(whitespace/operators)
   UpscaleBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_diff, top[0]->num(), top[0]->channels(),
