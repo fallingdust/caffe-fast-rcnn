@@ -32,7 +32,7 @@ __global__ void UpscaleBackward(const int nthreads,
     const int h = (index / width) % height;
     const int c = (index / width / height) % channels;
     const int n = index / width / height / channels;
-    const Dtype* const bottom_slice =
+    Dtype* bottom_slice =
         bottom_diff + (n * channels + c) * bottom_height * bottom_width;
     const int bh = int(h * bottom_height / float(height));
     const int hw = int(w * bottom_width / float(width));
@@ -64,7 +64,6 @@ void UpscaleLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   int count = top[0]->count();
-  caffe_gpu_set(count, Dtype(0.), bottom_diff);
   // NOLINT_NEXT_LINE(whitespace/operators)
   UpscaleBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_diff, top[0]->num(), top[0]->channels(),
