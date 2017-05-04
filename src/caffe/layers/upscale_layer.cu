@@ -36,7 +36,6 @@ __global__ void UpscaleBackward(const int nthreads,
         bottom_diff + (n * channels + c) * bottom_height * bottom_width;
     const int bh = int(h * bottom_height / float(height));
     const int hw = int(w * bottom_width / float(width));
-    top_data[index] = bottom_slice[bh * bottom_width + hw];
     bottom_slice[bh * bottom_width + hw] += top_diff[index];
   }
 }
