@@ -81,7 +81,7 @@ class UpscaleLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestBackword() {
+  void TestBackward() {
     LayerParameter layer_param;
     const int num = blob_bottom_0->num();
     const int channels = blob_bottom_0->channels();
@@ -138,7 +138,7 @@ TYPED_TEST(UpscaleLayerTest, TestForward) {
 }
 
 TYPED_TEST(UpscaleLayerTest, TestBackword) {
-  this->TestBackword();
+  this->TestBackward();
 }
 
 TYPED_TEST(UpscaleLayerTest, TestGradient) {
