@@ -47,6 +47,30 @@ void UpscaleLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void UpscaleLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0]) {
+    return;
+  }
+  const Dtype* top_diff = top[0]->cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
+
+  float factor_h = top[0]->height() / float(bottom[0]->height());
+  float factor_w = top[0]->width() / float(bottom[0]->width());
+
+  for (int n = 0; n < top[0]->num(); ++n) {
+    for (int c = 0; c < top[0]->channels(); ++c) {
+      for (int h = 0; h < top[0]->height(); ++h) {
+        int bh = int(h / factor_h);
+        for (int w = 0; w < top[0]->width(); ++w) {
+          int bw = int(w / factor_w);
+          bottom_diff[bh * bottom[0]->width() + bw] += top_diff[h * top[0]->width() + w];
+        }
+      }
+      // compute offset
+      bottom_diff += bottom[0]->offset(0, 1);
+      top_diff += top[0]->offset(0, 1);
+    }
+  }
 }
 
 
