@@ -154,7 +154,7 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   ConvolutionLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
-        blob_bottom_2_(new Blob<Dtype>(2, 3, 7, 5)),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 3, 3)),
         blob_top_(new Blob<Dtype>()),
         blob_top_2_(new Blob<Dtype>()) {}
   virtual void SetUp() {
@@ -211,8 +211,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 1);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
   EXPECT_EQ(this->blob_top_2_->channels(), 4);
-  EXPECT_EQ(this->blob_top_2_->height(), 3);
-  EXPECT_EQ(this->blob_top_2_->width(), 2);
+  EXPECT_EQ(this->blob_top_2_->height(), 1);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
@@ -224,8 +224,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 1);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
   EXPECT_EQ(this->blob_top_2_->channels(), 3);
-  EXPECT_EQ(this->blob_top_2_->height(), 3);
-  EXPECT_EQ(this->blob_top_2_->width(), 2);
+  EXPECT_EQ(this->blob_top_2_->height(), 1);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
@@ -259,7 +259,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -303,7 +303,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilatedConvolution) {
              this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -388,7 +388,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -435,7 +435,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilated3DConvolution) {
              this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
