@@ -22,22 +22,29 @@ class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   InnerProductLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
+        blob_bottom_2_(new Blob<Dtype>(4, 3, 4, 5)),
         blob_bottom_nobatch_(new Blob<Dtype>(1, 2, 3, 4)),
-        blob_top_(new Blob<Dtype>()) {
+        blob_top_(new Blob<Dtype>()),
+        blob_top_2_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
+    filler.Fill(this->blob_bottom_2_);
     blob_top_vec_.push_back(blob_top_);
   }
   virtual ~InnerProductLayerTest() {
     delete blob_bottom_;
+    delete blob_bottom_2_;
     delete blob_bottom_nobatch_;
     delete blob_top_;
+    delete blob_top_2_;
   }
   Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_bottom_nobatch_;
   Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_2_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -107,6 +114,8 @@ TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeTrue) {
 TYPED_TEST(InnerProductLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
   bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
@@ -129,6 +138,11 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
     const int count = this->blob_top_->count();
     for (int i = 0; i < count; ++i) {
       EXPECT_GE(data[i], 1.);
+    }
+    const Dtype* data2 = this->blob_top_2_->cpu_data();
+    const int count2 = this->blob_top_2_->count();
+    for (int i = 0; i < count2; ++i) {
+      EXPECT_GE(data2[i], 1.);
     }
   } else {
     LOG(ERROR) << "Skipping test due to old architecture.";
@@ -242,6 +256,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardNoBatch) {
 TYPED_TEST(InnerProductLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
   bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
@@ -268,6 +284,8 @@ TYPED_TEST(InnerProductLayerTest, TestGradient) {
 TYPED_TEST(InnerProductLayerTest, TestGradientTranspose) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
   bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
