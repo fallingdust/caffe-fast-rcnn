@@ -154,7 +154,7 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   ConvolutionLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
-        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 7, 5)),
         blob_top_(new Blob<Dtype>()),
         blob_top_2_(new Blob<Dtype>()) {}
   virtual void SetUp() {
@@ -211,8 +211,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 1);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
   EXPECT_EQ(this->blob_top_2_->channels(), 4);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->height(), 3);
+  EXPECT_EQ(this->blob_top_2_->width(), 2);
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
@@ -224,8 +224,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 1);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
   EXPECT_EQ(this->blob_top_2_->channels(), 3);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->height(), 3);
+  EXPECT_EQ(this->blob_top_2_->width(), 2);
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
@@ -506,6 +506,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_);
+  this->blob_bottom_2_->ReshapeLike(*this->blob_bottom_);
   this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
   // Compute Sobel G_x operator as 3 x 3 convolution.
   LayerParameter layer_param;
