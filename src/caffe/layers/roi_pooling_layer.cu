@@ -79,6 +79,10 @@ __global__ void ROIPoolForward(const int nthreads, const Dtype* bottom_data,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  int num_rois = bottom[1]->num();
+  if (num_rois == 0) {
+    return;
+  }
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const Dtype* bottom_rois = bottom[1]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -168,6 +172,10 @@ template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
+    return;
+  }
+  int num_rois = bottom[1]->num();
+  if (num_rois == 0) {
     return;
   }
   const Dtype* bottom_rois = bottom[1]->gpu_data();
