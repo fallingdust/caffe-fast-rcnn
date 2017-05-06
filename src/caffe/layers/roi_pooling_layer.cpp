@@ -54,13 +54,10 @@ void ROIPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Number of ROIs
-  int num_rois = bottom[1]->num();
-  if (num_rois == 0) {
-    return;
-  }
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_rois = bottom[1]->cpu_data();
+  // Number of ROIs
+  int num_rois = bottom[1]->num();
   int batch_size = bottom[0]->num();
   int top_count = top[0]->count();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -145,9 +142,6 @@ void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   // Number of ROIs
   const int num_rois = bottom[1]->num();
-  if (num_rois == 0) {
-    return;
-  }
   CHECK_EQ(num_rois, top[0]->num());
   const int bottom_count = bottom[0]->count();
 
