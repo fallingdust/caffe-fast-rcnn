@@ -63,14 +63,14 @@ template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width)
   // capacity_ must be initialized before calling Reshape
-  : data_(new SyncedMemory()), diff_(new SyncedMemory()), capacity_(0) {
+  : capacity_(0), data_(new SyncedMemory()), diff_(new SyncedMemory()) {
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
-  : data_(new SyncedMemory()), diff_(new SyncedMemory()), capacity_(0) {
+  : capacity_(0), data_(new SyncedMemory()), diff_(new SyncedMemory()) {
   Reshape(shape);
 }
 
