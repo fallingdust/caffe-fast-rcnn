@@ -166,16 +166,15 @@ void SyncedMemory::Resize(size_t new_size) {
       CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
     }
     cpu_ptr_ = NULL;
+    own_cpu_data_ = false;
 
 #ifndef CPU_ONLY
-    if (gpu_ptr_) {
+    if (gpu_ptr_ && own_gpu_data_) {
       CUDA_CHECK(cudaFree(gpu_ptr_));
     }
     gpu_ptr_ = NULL;
+    own_gpu_data_ = false;
 #endif  // CPU_ONLY
-
-    own_cpu_data_ = false;
-
   }
 }
 
