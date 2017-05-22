@@ -102,6 +102,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         const int blob_id = blobs_.size() - 1;
         net_input_blob_indices_.push_back(blob_id);
         net_input_blobs_.push_back(blobs_[blob_id].get());
+
+        // input blobs are excluded from memory optimization by default
+        excluded_blob_names_.insert(layer_param.top(top_id));
       }
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
@@ -244,6 +247,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         << "This network produces output " << *it;
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
     net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
+
+    // add output blob name to default excluded blobs
+    excluded_blob_names_.insert(*it);
   }
   for (size_t blob_id = 0; blob_id < blob_names_.size(); ++blob_id) {
     blob_names_index_[blob_names_[blob_id]] = blob_id;
@@ -254,6 +260,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   ShareWeights();
   debug_info_ = param.debug_info();
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
+  // optimize memory
+  optimize_memory_ = (param.mem_param().optimize_train() && phase_ == TRAIN) ||
+                     (param.mem_param().optimize_test() && phase_ == TEST);
+
+  // add additional specified blobs to the exclusion list
+  for (int ex_id = 0; ex_id < param.mem_param().exclude_blob_size(); ++ex_id){
+    excluded_blob_names_.insert(param.mem_param().exclude_blob(ex_id));
+  }
+
+  // launch memory optimization if necessary
+  if (!debug_info_ && optimize_memory_) {
+    MemoryOptimize_v2();
+  }
 }
 
 template <typename Dtype>
