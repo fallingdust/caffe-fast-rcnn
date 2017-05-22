@@ -39,8 +39,16 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   }
   if (count_ > capacity_) {
     capacity_ = count_;
-    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    if (data_) {
+      data_->Resize(capacity_ * sizeof(Dtype));
+    } else {
+      data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    }
+    if (diff_) {
+      diff_->Resize(capacity_ * sizeof(Dtype));
+    } else {
+      diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    }
   }
 }
 
@@ -92,8 +100,8 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size));
-    diff_.reset(new SyncedMemory(size));
+    data_->Resize(size);
+    diff_->Resize(size);
   }
   data_->set_cpu_data(data);
 }
@@ -110,8 +118,8 @@ void Blob<Dtype>::set_gpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size));
-    diff_.reset(new SyncedMemory(size));
+    data_->Resize(size);
+    diff_->Resize(size);
   }
   data_->set_gpu_data(data);
 }
@@ -162,6 +170,22 @@ template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
+}
+
+template <typename Dtype>
+bool Blob<Dtype>::IsSharingDiff(const Blob* other) {
+  CHECK_EQ(count_, other->count());
+  return diff_ == other->diff();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::SetDiffStorage(shared_ptr<SyncedMemory>& storage){
+  diff_ = storage;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::SetDataStorage(shared_ptr<SyncedMemory>& storage) {
+  data_ = storage;
 }
 
 // The "update" method is used for parameter blobs in a Net, which are stored
