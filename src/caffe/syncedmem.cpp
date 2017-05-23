@@ -154,7 +154,6 @@ void* SyncedMemory::mutable_gpu_data() {
 
 void SyncedMemory::Resize(size_t new_size) {
   if (new_size <= size_){
-    size_ = new_size;
     // do nothing if the new size requirement is already fulfilled
     return;
   } else {

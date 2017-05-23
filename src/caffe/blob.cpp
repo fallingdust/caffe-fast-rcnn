@@ -100,8 +100,8 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_->Resize(size);
-    diff_->Resize(size);
+      data_.reset(new SyncedMemory(size));
+      diff_.reset(new SyncedMemory(size));
   }
   data_->set_cpu_data(data);
 }
@@ -118,8 +118,8 @@ void Blob<Dtype>::set_gpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_->Resize(size);
-    diff_->Resize(size);
+      data_.reset(new SyncedMemory(size));
+      diff_.reset(new SyncedMemory(size));
   }
   data_->set_gpu_data(data);
 }
