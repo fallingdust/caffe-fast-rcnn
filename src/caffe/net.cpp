@@ -102,9 +102,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         const int blob_id = blobs_.size() - 1;
         net_input_blob_indices_.push_back(blob_id);
         net_input_blobs_.push_back(blobs_[blob_id].get());
-
-        // input blobs are excluded from memory optimization by default
-        excluded_blob_names_.insert(layer_param.top(top_id));
       }
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
@@ -247,9 +244,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         << "This network produces output " << *it;
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
     net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
-
-    // add output blob name to default excluded blobs
-    excluded_blob_names_.insert(*it);
   }
   for (size_t blob_id = 0; blob_id < blob_names_.size(); ++blob_id) {
     blob_names_index_[blob_names_[blob_id]] = blob_id;
@@ -588,6 +582,15 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
+    if (optimize_memory_) {
+      // Manually set the bottom diff to zero if it is not backpropagated.
+      // If not set, they may be corrupted when memory optimization is on.
+      const vector<Blob<Dtype>*>& bottom_vec = bottom_vecs_[i];
+      for (int j = 0; j < bottom_vec.size(); ++j)
+        if (!layer_need_backward_[i] || !bottom_need_backward_[i][j]) {
+          bottom_vec[j]->scale_diff(0);
+        }
+    }
     for (int c = 0; c < before_backward_.size(); ++c) {
       before_backward_[c]->run(i);
     }
