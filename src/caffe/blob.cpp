@@ -37,7 +37,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
     shape_[i] = shape[i];
     shape_data[i] = shape[i];
   }
-  if (count_ > capacity_) {
+  if (count_ > capacity_ || (count_ == 0 && capacity_ == 0)) {
     capacity_ = count_;
     if (data_) {
       data_->Resize(capacity_ * sizeof(Dtype));

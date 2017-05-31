@@ -84,6 +84,9 @@ void ROIPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   int* argmax_data = max_idx_.mutable_gpu_data();
   int count = top[0]->count();
+  if (bottom[1]->num() == 0) {
+    return;
+  }
   // NOLINT_NEXT_LINE(whitespace/operators)
   ROIPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, spatial_scale_, channels_, height_, width_,
@@ -167,7 +170,7 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) {
+  if (!propagate_down[0] || top[0]->num() == 0) {
     return;
   }
   const Dtype* bottom_rois = bottom[1]->gpu_data();
