@@ -61,10 +61,10 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
         int y_bottom = floor(h);
         int y_top = ceil(h);
 
-        int top_left_index = y_top * width_ + x_left;
-        int top_right_index = y_top * width_ + x_right;
-        int bottom_left_index = y_bottom * width_ + x_left;
-        int bottom_right_index = y_bottom * width_ + x_right;
+        int top_left_index = y_top * width + x_left;
+        int top_right_index = y_top * width + x_right;
+        int bottom_left_index = y_bottom * width + x_left;
+        int bottom_right_index = y_bottom * width + x_right;
 
         bool is_top_left_in = x_left >= 0 && x_left <= width - 1
                               && y_top >= 0 && y_top <= height - 1;
