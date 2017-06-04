@@ -224,7 +224,7 @@ void ROIAlignLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* argmax_data_y = max_idx_y_.gpu_data();
   // NOLINT_NEXT_LINE(whitespace/operators)
   ROIAlignBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, top_diff, argmax_data_x, argmax_data_x, top[0]->num(), spatial_scale_, channels_,
+      count, top_diff, argmax_data_x, argmax_data_y, top[0]->num(), spatial_scale_, channels_,
       height_, width_, pooled_height_, pooled_width_, bottom_diff, bottom_rois);
   CUDA_POST_KERNEL_CHECK;
 }

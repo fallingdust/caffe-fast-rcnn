@@ -44,7 +44,7 @@ void ROIAlignLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   max_idx_x_.Reshape(bottom[1]->num(), channels_, pooled_height_,
       pooled_width_);
   max_idx_y_.Reshape(bottom[1]->num(), channels_, pooled_height_,
-                     pooled_width_);
+      pooled_width_);
 }
 
 template <typename Dtype>
