@@ -58,8 +58,14 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
         // Selecting four regular locations for bilinear interpolation
         int x_left = floor(w);
         int x_right = ceil(w);
+        if (x_right == x_left) {
+          x_right = x_left + 1;
+        }
         int y_bottom = floor(h);
         int y_top = ceil(h);
+        if (y_top == y_bottom) {
+          y_top = y_bottom + 1;
+        }
 
         int top_left_index = y_top * width + x_left;
         int top_right_index = y_top * width + x_right;
@@ -187,21 +193,23 @@ __global__ void ROIAlignBackward(const int nthreads, const Dtype* top_diff,
 
           int x_left = floor(max_x);
           int x_right = ceil(max_x);
+          if (x_right == x_left) {
+            x_right = x_left + 1;
+          }
           int y_bottom = floor(max_y);
           int y_top = ceil(max_y);
+          if (y_top == y_bottom) {
+            y_top = y_bottom + 1;
+          }
 
           if (x_left == w && y_top == h)
-            gradient += (1 - max_x + x_left) * (1 - y_top + max_y)
-                        * offset_top_diff[pindex];
+            gradient += (1 - max_x + x_left) * (1 - y_top + max_y) * offset_top_diff[pindex];
           else if (x_left == w && y_bottom == h)
-            gradient += (1 - max_x + x_left) * (1 - max_y + y_bottom)
-                        * offset_top_diff[pindex];
+            gradient += (1 - max_x + x_left) * (1 - max_y + y_bottom) * offset_top_diff[pindex];
           else if (x_right == w && y_top == h)
-            gradient += (1 - x_right + max_x) * (1 - y_top + max_y)
-                        * offset_top_diff[pindex];
+            gradient += (1 - x_right + max_x) * (1 - y_top + max_y) * offset_top_diff[pindex];
           else if (x_right == w && y_bottom == h)
-            gradient += (1 - x_right + max_x) * (1 - max_y + y_bottom)
-                        * offset_top_diff[pindex];
+            gradient += (1 - x_right + max_x) * (1 - max_y + y_bottom) * offset_top_diff[pindex];
         }
       }
     }
