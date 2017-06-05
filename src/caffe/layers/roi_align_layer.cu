@@ -35,10 +35,10 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype bin_size_w = static_cast<Dtype>(roi_width)
                        / static_cast<Dtype>(pooled_width);
 
-    int hstart = static_cast<Dtype>(ph) * bin_size_h;
-    int wstart = static_cast<Dtype>(pw) * bin_size_w;
-    int hend = static_cast<Dtype>(ph + 1) * bin_size_h;
-    int wend = static_cast<Dtype>(pw + 1) * bin_size_w;
+    Dtype hstart = static_cast<Dtype>(ph) * bin_size_h;
+    Dtype wstart = static_cast<Dtype>(pw) * bin_size_w;
+    Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h;
+    Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
     // Add roi offsets and clip to input boundaries
     hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height));
