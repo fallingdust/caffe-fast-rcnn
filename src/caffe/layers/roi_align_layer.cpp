@@ -175,15 +175,6 @@ void ROIAlignLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     int roi_end_w = ceil(bottom_rois[3] * spatial_scale_);
     int roi_end_h = ceil(bottom_rois[4] * spatial_scale_);
 
-    // Force malformed ROIs to be 1x1
-    int roi_width = max(roi_end_w - roi_start_w + 1, 1);
-    int roi_height = max(roi_end_h - roi_start_h + 1, 1);
-
-    Dtype bin_size_h = static_cast<Dtype>(roi_height)
-                       / static_cast<Dtype>(pooled_height_);
-    Dtype bin_size_w = static_cast<Dtype>(roi_width)
-                       / static_cast<Dtype>(pooled_width_);
-
     // Skip if ROI doesn't include (h, w)
     int start_h = max(0, roi_start_h);
     int end_h = min(height_, roi_end_h + 1);
