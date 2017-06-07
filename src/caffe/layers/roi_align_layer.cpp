@@ -74,12 +74,10 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     CHECK_GE(roi_batch_ind, 0);
     CHECK_LT(roi_batch_ind, batch_size);
 
-    Dtype roi_height = max(roi_end_h - roi_start_h + 1, Dtype(1.));
-    Dtype roi_width = max(roi_end_w - roi_start_w + 1, Dtype(1.));
-    const Dtype bin_size_h = static_cast<Dtype>(roi_height)
-                             / static_cast<Dtype>(pooled_height_);
-    const Dtype bin_size_w = static_cast<Dtype>(roi_width)
-                             / static_cast<Dtype>(pooled_width_);
+    Dtype roi_height = roi_end_h - roi_start_h;
+    Dtype roi_width = roi_end_w - roi_start_w;
+    const Dtype bin_size_h = roi_height / static_cast<Dtype>(pooled_height_);
+    const Dtype bin_size_w = roi_width / static_cast<Dtype>(pooled_width_);
 
     const Dtype* batch_data = bottom_data + bottom[0]->offset(roi_batch_ind);
 
@@ -92,10 +90,10 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h;
           Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
-          hstart = min(max(hstart + roi_start_h, Dtype(0.)), static_cast<Dtype>(height_));
-          hend = min(max(hend + roi_start_h, Dtype(0.)), static_cast<Dtype>(height_));
-          wstart = min(max(wstart + roi_start_w, Dtype(0.)), static_cast<Dtype>(width_));
-          wend = min(max(wend + roi_start_w, Dtype(0.)), static_cast<Dtype>(width_));
+          hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
+          hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
+          wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
+          wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
 
           bool is_empty = (hend <= hstart) || (wend <= wstart);
 
@@ -106,9 +104,9 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             argmax_data_y[pool_index] = -1;
           }
 
-          for (Dtype h = hstart; h < hend; h += 1.) {
-            for (Dtype w = wstart; w < wend; w += 1.) {
-              // Selecting four regular locations for bilinear interpolation
+          // Selecting four regular locations for bilinear interpolation
+          for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+            for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
               int x_left = floor(w);
               int x_right = ceil(w);
               if (x_left == x_right) {
@@ -125,24 +123,11 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               int bottom_left_index = y_bottom * width_ + x_left;
               int bottom_right_index = y_bottom * width_ + x_right;
 
-              bool is_top_left_in = x_left >= 0 && x_left <= width_ - 1
-                                    && y_top >= 0 && y_top <= height_ - 1;
-              bool is_top_right_in = x_right >= 0 && x_right <= width_ - 1
-                                     && y_top >= 0 && y_top <= height_ - 1;
-              bool is_bottom_left_in = x_left >= 0 && x_left <= width_ - 1
-                                       && y_bottom >= 0 && y_bottom <= height_ - 1;
-              bool is_bottom_right_in = x_right >= 0 && x_right <= width_ - 1
-                                        && y_bottom >= 0 && y_bottom <= height_ - 1;
-
               Dtype val = 0;
-              if (is_top_left_in)
-                val += (1 - w + x_left) * (1 - y_top + h) * batch_data[top_left_index];
-              if (is_top_right_in)
-                val += (1 - x_right + w) * (1 - y_top + h) * batch_data[top_right_index];
-              if (is_bottom_left_in)
-                val += (1 - w + x_left) * (1 - h + y_bottom) * batch_data[bottom_left_index];
-              if (is_bottom_right_in)
-                val += (1 - x_right + w) * (1 - h + y_bottom) * batch_data[bottom_right_index];
+              val += (1 - w + x_left) * (1 - y_top + h) * batch_data[top_left_index];
+              val += (1 - x_right + w) * (1 - y_top + h) * batch_data[top_right_index];
+              val += (1 - w + x_left) * (1 - h + y_bottom) * batch_data[bottom_left_index];
+              val += (1 - x_right + w) * (1 - h + y_bottom) * batch_data[bottom_right_index];
 
               if (val > top_data[pool_index]) {
                 top_data[pool_index] = val;
@@ -213,25 +198,12 @@ void ROIAlignLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         for (int w = start_w; w < end_w; ++w) {
           int index = h * width_ + w;
 
-          // Compute feasible set of pooled units that could have pooled
-          // this bottom unit
-
-          int phstart = floor(static_cast<Dtype>(h - roi_start_h) / bin_size_h);
-          int phend = ceil(static_cast<Dtype>(h - roi_start_h + 1) / bin_size_h);
-          int pwstart = floor(static_cast<Dtype>(w - roi_start_w) / bin_size_w);
-          int pwend = ceil(static_cast<Dtype>(w - roi_start_w + 1) / bin_size_w);
-
-          phstart = min(max(phstart, 0), pooled_height_);
-          phend = min(max(phend, 0), pooled_height_);
-          pwstart = min(max(pwstart, 0), pooled_width_);
-          pwend = min(max(pwend, 0), pooled_width_);
-
           Dtype gradient = Dtype(0);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) reduction(+:gradient)
 #endif
-          for (int ph = phstart; ph < phend; ++ph) {
-            for (int pw = pwstart; pw < pwend; ++pw) {
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
               int pindex = ph * pooled_width_ + pw;
               Dtype max_x = argmax_data_x[pindex];
               Dtype max_y = argmax_data_y[pindex];

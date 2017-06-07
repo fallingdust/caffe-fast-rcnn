@@ -27,13 +27,10 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype roi_end_w = bottom_rois[3] * spatial_scale;
     Dtype roi_end_h = bottom_rois[4] * spatial_scale;
 
-    // Force malformed ROIs to be 1x1
-    Dtype roi_width = max(roi_end_w - roi_start_w + 1, Dtype(1.));
-    Dtype roi_height = max(roi_end_h - roi_start_h + 1, Dtype(1.));
-    Dtype bin_size_h = static_cast<Dtype>(roi_height)
-                       / static_cast<Dtype>(pooled_height);
-    Dtype bin_size_w = static_cast<Dtype>(roi_width)
-                       / static_cast<Dtype>(pooled_width);
+    Dtype roi_width = roi_end_w - roi_start_w;
+    Dtype roi_height = roi_end_h - roi_start_h;
+    Dtype bin_size_h = roi_height / static_cast<Dtype>(pooled_height);
+    Dtype bin_size_w = roi_width / static_cast<Dtype>(pooled_width);
 
     Dtype hstart = static_cast<Dtype>(ph) * bin_size_h;
     Dtype wstart = static_cast<Dtype>(pw) * bin_size_w;
@@ -41,10 +38,10 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
     // Add roi offsets and clip to input boundaries
-    hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height));
-    hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height));
-    wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width));
-    wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width));
+    hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
+    hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
+    wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
+    wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
     bool is_empty = (hend <= hstart) || (wend <= wstart);
 
     // Define an empty pooling region to be zero
@@ -53,9 +50,9 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype maxidx_x = -1;
     Dtype maxidx_y = -1;
     bottom_data += (roi_batch_ind * channels + c) * height * width;
-    for (Dtype h = hstart; h < hend; h += 1.) {
-      for (Dtype w = wstart; w < wend; w += 1.) {
-        // Selecting four regular locations for bilinear interpolation
+    // Selecting four regular locations for bilinear interpolation
+    for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+      for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
         int x_left = floor(w);
         int x_right = ceil(w);
         if (x_right == x_left) {
@@ -72,24 +69,11 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
         int bottom_left_index = y_bottom * width + x_left;
         int bottom_right_index = y_bottom * width + x_right;
 
-        bool is_top_left_in = x_left >= 0 && x_left <= width - 1
-                              && y_top >= 0 && y_top <= height - 1;
-        bool is_top_right_in = x_right >= 0 && x_right <= width - 1
-                               && y_top >= 0 && y_top <= height - 1;
-        bool is_bottom_left_in = x_left >= 0 && x_left <= width - 1
-                                 && y_bottom >= 0 && y_bottom <= height - 1;
-        bool is_bottom_right_in = x_right >= 0 && x_right <= width - 1
-                                  && y_bottom >= 0 && y_bottom <= height - 1;
-
         Dtype val = 0;
-        if (is_top_left_in)
-          val += (1 - w + x_left) * (1 - y_top + h) * bottom_data[top_left_index];
-        if (is_top_right_in)
-          val += (1 - x_right + w) * (1 - y_top + h) * bottom_data[top_right_index];
-        if (is_bottom_left_in)
-          val += (1 - w + x_left) * (1 - h + y_bottom) * bottom_data[bottom_left_index];
-        if (is_bottom_right_in)
-          val += (1 - x_right + w) * (1 - h + y_bottom) * bottom_data[bottom_right_index];
+        val += (1 - w + x_left) * (1 - y_top + h) * bottom_data[top_left_index];
+        val += (1 - x_right + w) * (1 - y_top + h) * bottom_data[top_right_index];
+        val += (1 - w + x_left) * (1 - h + y_bottom) * bottom_data[bottom_left_index];
+        val += (1 - x_right + w) * (1 - h + y_bottom) * bottom_data[bottom_right_index];
 
         if (val > maxval) {
           maxval = val;
@@ -163,30 +147,8 @@ __global__ void ROIAlignBackward(const int nthreads, const Dtype* top_diff,
       const Dtype* offset_argmax_data_x = argmax_data_x + offset;
       const Dtype* offset_argmax_data_y = argmax_data_y + offset;
 
-      // Compute feasible set of pooled units that could have pooled
-      // this bottom unit
-
-      // Force malformed ROIs to be 1x1
-      int roi_width = max(roi_end_w - roi_start_w + 1, 1);
-      int roi_height = max(roi_end_h - roi_start_h + 1, 1);
-
-      Dtype bin_size_h = static_cast<Dtype>(roi_height)
-                         / static_cast<Dtype>(pooled_height);
-      Dtype bin_size_w = static_cast<Dtype>(roi_width)
-                         / static_cast<Dtype>(pooled_width);
-
-      int phstart = floor(static_cast<Dtype>(h - roi_start_h) / bin_size_h);
-      int phend = ceil(static_cast<Dtype>(h - roi_start_h + 1) / bin_size_h);
-      int pwstart = floor(static_cast<Dtype>(w - roi_start_w) / bin_size_w);
-      int pwend = ceil(static_cast<Dtype>(w - roi_start_w + 1) / bin_size_w);
-
-      phstart = min(max(phstart, 0), pooled_height);
-      phend = min(max(phend, 0), pooled_height);
-      pwstart = min(max(pwstart, 0), pooled_width);
-      pwend = min(max(pwend, 0), pooled_width);
-
-      for (int ph = phstart; ph < phend; ++ph) {
-        for (int pw = pwstart; pw < pwend; ++pw) {
+      for (int ph = 0; ph < pooled_height; ++ph) {
+        for (int pw = 0; pw < pooled_width; ++pw) {
           int pindex = ph * pooled_width + pw;
           Dtype max_x = offset_argmax_data_x[pindex];
           Dtype max_y = offset_argmax_data_y[pindex];
