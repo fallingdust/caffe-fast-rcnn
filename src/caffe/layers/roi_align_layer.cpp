@@ -90,10 +90,10 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h;
           Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
-          hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height_));
-          hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height_));
-          wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width_));
-          wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width_));
+          hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
+          hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
+          wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
+          wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
 
           bool is_empty = (hend <= hstart) || (wend <= wstart);
 
@@ -104,70 +104,35 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             argmax_data_y[pool_index] = -1;
           }
 
-          for (Dtype h = hstart; ; h += Dtype(1)) {
-            if (ph == pooled_height_ - 1) {
-              if (h >= hend + Dtype(1)) {
-                break;
-              }
-              if (hend <= height_ - 1) {
-                h = hend;
-              }
-            } else {
-              if (h >= hend) {
-                break;
-              }
-            }
+          // Selecting the center locations for bilinear interpolation
+          Dtype h = hstart + bin_size_h / Dtype(2);
+          Dtype w = wstart + bin_size_w / Dtype(2);
+          int x_left = floor(w);
+          int x_right = ceil(w);
+          if (x_left == x_right) {
+            x_right = x_left + 1;
+          }
+          int y_bottom = floor(h);
+          int y_top = ceil(h);
+          if (y_bottom == y_top) {
+            y_top = y_bottom + 1;
+          }
 
-            for (Dtype w = wstart; ; w += Dtype(1)) {
-              if (pw == pooled_width_ - 1) {
-                if (w >= wend + Dtype(1)) {
-                  break;
-                }
-                if (wend <= width_ - 1) {
-                  w = wend;
-                }
-              } else {
-                if (w >= wend) {
-                  break;
-                }
-              }
+          int top_left_index = y_top * width_ + x_left;
+          int top_right_index = y_top * width_ + x_right;
+          int bottom_left_index = y_bottom * width_ + x_left;
+          int bottom_right_index = y_bottom * width_ + x_right;
 
-              int x_left = floor(w);
-              int x_right = ceil(w);
-              if (x_left == x_right) {
-                x_right = x_left + 1;
-              }
-              int y_bottom = floor(h);
-              int y_top = ceil(h);
-              if (y_bottom == y_top) {
-                y_top = y_bottom + 1;
-              }
+          Dtype val = 0;
+          val += (1 - w + x_left) * (1 - y_top + h) * batch_data[top_left_index];
+          val += (1 - x_right + w) * (1 - y_top + h) * batch_data[top_right_index];
+          val += (1 - w + x_left) * (1 - h + y_bottom) * batch_data[bottom_left_index];
+          val += (1 - x_right + w) * (1 - h + y_bottom) * batch_data[bottom_right_index];
 
-              int top_left_index = y_top * width_ + x_left;
-              int top_right_index = y_top * width_ + x_right;
-              int bottom_left_index = y_bottom * width_ + x_left;
-              int bottom_right_index = y_bottom * width_ + x_right;
-
-              Dtype val = 0;
-              val += (1 - w + x_left) * (1 - y_top + h) * batch_data[top_left_index];
-              val += (1 - x_right + w) * (1 - y_top + h) * batch_data[top_right_index];
-              val += (1 - w + x_left) * (1 - h + y_bottom) * batch_data[bottom_left_index];
-              val += (1 - x_right + w) * (1 - h + y_bottom) * batch_data[bottom_right_index];
-
-              if (val > top_data[pool_index]) {
-                top_data[pool_index] = val;
-                argmax_data_x[pool_index] = w;
-                argmax_data_y[pool_index] = h;
-              }
-
-              if (w == wstart) {
-                w = floor(w);
-              }
-            }
-
-            if (h == hstart) {
-              h = floor(h);
-            }
+          if (val > top_data[pool_index]) {
+            top_data[pool_index] = val;
+            argmax_data_x[pool_index] = w;
+            argmax_data_y[pool_index] = h;
           }
         }
       }
