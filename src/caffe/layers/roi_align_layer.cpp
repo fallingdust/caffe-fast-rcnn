@@ -90,10 +90,10 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h;
           Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
-          hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
-          hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height_ - 1));
-          wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
-          wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width_ - 1));
+          hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height_));
+          hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height_));
+          wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width_));
+          wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width_));
 
           bool is_empty = (hend <= hstart) || (wend <= wstart);
 
@@ -104,9 +104,34 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             argmax_data_y[pool_index] = -1;
           }
 
-          // Selecting four regular locations for bilinear interpolation
-          for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
-            for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+          for (Dtype h = hstart; ; h += Dtype(1)) {
+            if (ph == pooled_height_ - 1) {
+              if (h >= hend + Dtype(1)) {
+                break;
+              }
+              if (hend <= height_ - 1) {
+                h = hend;
+              }
+            } else {
+              if (h >= hend) {
+                break;
+              }
+            }
+
+            for (Dtype w = wstart; ; w += Dtype(1)) {
+              if (pw == pooled_width_ - 1) {
+                if (w >= wend + Dtype(1)) {
+                  break;
+                }
+                if (wend <= width_ - 1) {
+                  w = wend;
+                }
+              } else {
+                if (w >= wend) {
+                  break;
+                }
+              }
+
               int x_left = floor(w);
               int x_right = ceil(w);
               if (x_left == x_right) {
@@ -134,6 +159,14 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                 argmax_data_x[pool_index] = w;
                 argmax_data_y[pool_index] = h;
               }
+
+              if (w == wstart) {
+                w = floor(w);
+              }
+            }
+
+            if (h == hstart) {
+              h = floor(h);
             }
           }
         }

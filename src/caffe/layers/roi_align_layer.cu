@@ -38,10 +38,10 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
 
     // Add roi offsets and clip to input boundaries
-    hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
-    hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
-    wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
-    wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
+    hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height));
+    hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height));
+    wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width));
+    wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width));
     bool is_empty = (hend <= hstart) || (wend <= wstart);
 
     // Define an empty pooling region to be zero
@@ -50,9 +50,35 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype maxidx_x = -1;
     Dtype maxidx_y = -1;
     bottom_data += (roi_batch_ind * channels + c) * height * width;
-    // Selecting four regular locations for bilinear interpolation
-    for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
-      for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+
+    for (Dtype h = hstart; ; h += Dtype(1)) {
+      if (ph == pooled_height_ - 1) {
+        if (h >= hend + Dtype(1)) {
+          break;
+        }
+        if (hend <= height_ - 1) {
+          h = hend;
+        }
+      } else {
+        if (h >= hend) {
+          break;
+        }
+      }
+
+      for (Dtype w = wstart; ; w += Dtype(1)) {
+        if (pw == pooled_width_ - 1) {
+          if (w >= wend + Dtype(1)) {
+            break;
+          }
+          if (wend <= width_ - 1) {
+            w = wend;
+          }
+        } else {
+          if (w >= wend) {
+            break;
+          }
+        }
+
         int x_left = floor(w);
         int x_right = ceil(w);
         if (x_right == x_left) {
@@ -80,6 +106,14 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
           maxidx_x = w;
           maxidx_y = h;
         }
+
+        if (w == wstart) {
+          w = floor(w);
+        }
+      }
+
+      if (h == hstart) {
+        h = floor(h);
       }
     }
     top_data[index] = maxval;
