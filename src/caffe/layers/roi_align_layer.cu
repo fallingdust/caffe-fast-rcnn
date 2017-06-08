@@ -52,11 +52,11 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     bottom_data += (roi_batch_ind * channels + c) * height * width;
 
     for (Dtype h = hstart; ; h += Dtype(1)) {
-      if (ph == pooled_height_ - 1) {
+      if (ph == pooled_height - 1) {
         if (h >= hend + Dtype(1)) {
           break;
         }
-        if (hend <= height_ - 1) {
+        if (hend <= height - 1) {
           h = hend;
         }
       } else {
@@ -66,11 +66,11 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
       }
 
       for (Dtype w = wstart; ; w += Dtype(1)) {
-        if (pw == pooled_width_ - 1) {
+        if (pw == pooled_width - 1) {
           if (w >= wend + Dtype(1)) {
             break;
           }
-          if (wend <= width_ - 1) {
+          if (wend <= width - 1) {
             w = wend;
           }
         } else {
