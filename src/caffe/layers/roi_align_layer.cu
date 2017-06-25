@@ -22,26 +22,21 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
 
     bottom_rois += n * 5;
     int roi_batch_ind = bottom_rois[0];
-    Dtype roi_start_w = bottom_rois[1] * spatial_scale;
-    Dtype roi_start_h = bottom_rois[2] * spatial_scale;
-    Dtype roi_end_w = bottom_rois[3] * spatial_scale;
-    Dtype roi_end_h = bottom_rois[4] * spatial_scale;
+    Dtype roi_start_w = min(max(bottom_rois[1] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
+    Dtype roi_start_h = min(max(bottom_rois[2] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
+    Dtype roi_end_w = min(max(bottom_rois[3] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
+    Dtype roi_end_h = min(max(bottom_rois[4] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
 
     Dtype roi_width = roi_end_w - roi_start_w;
     Dtype roi_height = roi_end_h - roi_start_h;
     Dtype bin_size_h = roi_height / static_cast<Dtype>(pooled_height);
     Dtype bin_size_w = roi_width / static_cast<Dtype>(pooled_width);
 
-    Dtype hstart = static_cast<Dtype>(ph) * bin_size_h;
-    Dtype wstart = static_cast<Dtype>(pw) * bin_size_w;
-    Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h;
-    Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w;
+    Dtype hstart = static_cast<Dtype>(ph) * bin_size_h + roi_start_h;
+    Dtype wstart = static_cast<Dtype>(pw) * bin_size_w + roi_start_w;
+    Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h + roi_start_h;
+    Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w + roi_start_w;
 
-    // Add roi offsets and clip to input boundaries
-    hstart = min(max(hstart + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
-    hend = min(max(hend + roi_start_h, Dtype(0)), static_cast<Dtype>(height - 1));
-    wstart = min(max(wstart + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
-    wend = min(max(wend + roi_start_w, Dtype(0)), static_cast<Dtype>(width - 1));
     bool is_empty = (hend <= hstart) || (wend <= wstart);
 
     // Define an empty pooling region to be zero
