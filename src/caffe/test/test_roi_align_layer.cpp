@@ -79,10 +79,10 @@ TYPED_TEST(ROIAlignLayerTest, TestForwardAliquot) {
   EXPECT_EQ(this->blob_top_data_->height(), 2);
   EXPECT_EQ(this->blob_top_data_->width(), 2);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_NEAR(this->blob_top_data_->cpu_data()[0], 5.5, 1e-5);
-  EXPECT_NEAR(this->blob_top_data_->cpu_data()[1], 7, 1e-5);
-  EXPECT_NEAR(this->blob_top_data_->cpu_data()[2], 13, 1e-5);
-  EXPECT_NEAR(this->blob_top_data_->cpu_data()[3], 14.5, 1e-5);
+  EXPECT_NEAR(this->blob_top_data_->cpu_data()[0], 7.75, 1e-5);
+  EXPECT_NEAR(this->blob_top_data_->cpu_data()[1], 9.25, 1e-5);
+  EXPECT_NEAR(this->blob_top_data_->cpu_data()[2], 15.25, 1e-5);
+  EXPECT_NEAR(this->blob_top_data_->cpu_data()[3], 16.75, 1e-5);
 }
 
 //TYPED_TEST(ROIAlignLayerTest, TestForwardAliquant) {
