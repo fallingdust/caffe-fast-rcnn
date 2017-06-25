@@ -45,35 +45,37 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     Dtype maxidx_x = -1;
     Dtype maxidx_y = -1;
     bottom_data += (roi_batch_ind * channels + c) * height * width;
-    // Selecting the center locations for bilinear interpolation
-    Dtype h = hstart + bin_size_h / Dtype(2);
-    Dtype w = wstart + bin_size_w / Dtype(2);
-    int x_left = floor(w);
-    int x_right = ceil(w);
-    if (x_right == x_left) {
-      x_right = x_left + 1;
-    }
-    int y_bottom = floor(h);
-    int y_top = ceil(h);
-    if (y_top == y_bottom) {
-      y_top = y_bottom + 1;
-    }
+    // Selecting four regular locations for bilinear interpolation
+    for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+      for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+        int x_left = floor(w);
+        int x_right = ceil(w);
+        if (x_right == x_left) {
+          x_right = x_left + 1;
+        }
+        int y_bottom = floor(h);
+        int y_top = ceil(h);
+        if (y_top == y_bottom) {
+          y_top = y_bottom + 1;
+        }
 
-    int top_left_index = y_top * width + x_left;
-    int top_right_index = y_top * width + x_right;
-    int bottom_left_index = y_bottom * width + x_left;
-    int bottom_right_index = y_bottom * width + x_right;
+        int top_left_index = y_top * width + x_left;
+        int top_right_index = y_top * width + x_right;
+        int bottom_left_index = y_bottom * width + x_left;
+        int bottom_right_index = y_bottom * width + x_right;
 
-    Dtype val = 0;
-    val += (1 - w + x_left) * (1 - y_top + h) * bottom_data[top_left_index];
-    val += (1 - x_right + w) * (1 - y_top + h) * bottom_data[top_right_index];
-    val += (1 - w + x_left) * (1 - h + y_bottom) * bottom_data[bottom_left_index];
-    val += (1 - x_right + w) * (1 - h + y_bottom) * bottom_data[bottom_right_index];
+        Dtype val = 0;
+        val += (1 - w + x_left) * (1 - y_top + h) * bottom_data[top_left_index];
+        val += (1 - x_right + w) * (1 - y_top + h) * bottom_data[top_right_index];
+        val += (1 - w + x_left) * (1 - h + y_bottom) * bottom_data[bottom_left_index];
+        val += (1 - x_right + w) * (1 - h + y_bottom) * bottom_data[bottom_right_index];
 
-    if (val > maxval) {
-      maxval = val;
-      maxidx_x = w;
-      maxidx_y = h;
+        if (val > maxval) {
+          maxval = val;
+          maxidx_x = w;
+          maxidx_y = h;
+        }
+      }
     }
     top_data[index] = maxval;
     argmax_data_x[index] = maxidx_x;
