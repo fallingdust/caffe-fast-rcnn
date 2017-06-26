@@ -176,10 +176,10 @@ namespace caffe {
           int bottom_left_index = y_bottom * width + x_left;
           int bottom_right_index = y_bottom * width + x_right;
 
-          caffe_gpu_atomic_add(diff_val * (x_right - w) * (y_bottom - h), offset_bottom_diff + top_left_index);
-          caffe_gpu_atomic_add(diff_val * (w - x_left) * (y_bottom - h), offset_bottom_diff + top_right_index);
-          caffe_gpu_atomic_add(diff_val * (x_right - w) * (h - y_top), offset_bottom_diff + bottom_left_index);
-          caffe_gpu_atomic_add(diff_val * (w - x_left) * (h - y_top), offset_bottom_diff + bottom_right_index);
+          caffe_gpu_atomic_add(diff_val * (x_right - w) * (h - y_bottom), offset_bottom_diff + top_left_index);
+          caffe_gpu_atomic_add(diff_val * (w - x_left) * (h - y_bottom), offset_bottom_diff + top_right_index);
+          caffe_gpu_atomic_add(diff_val * (x_right - w) * (y_top - h), offset_bottom_diff + bottom_left_index);
+          caffe_gpu_atomic_add(diff_val * (w - x_left) * (y_top - h), offset_bottom_diff + bottom_right_index);
         }
       }
     }

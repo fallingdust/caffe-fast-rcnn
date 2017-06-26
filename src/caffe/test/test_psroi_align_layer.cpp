@@ -84,23 +84,23 @@ TYPED_TEST(PSROIAlignLayerTest, TestForward) {
   EXPECT_NEAR(this->blob_top_data_->cpu_data()[1], 32, 1e-5);
 }
 
-//TYPED_TEST(PSROIAlignLayerTest, TestGradient) {
-//  typedef typename TypeParam::Dtype Dtype;
-//  LayerParameter layer_param;
-//  PSROIPoolingParameter* psroi_pooling_param = layer_param.mutable_psroi_pooling_param();
-//  psroi_pooling_param->set_group_size(2);
-//  psroi_pooling_param->set_output_dim(1);
-//  psroi_pooling_param->set_spatial_scale(1);
-//  PSROIAlignLayer<Dtype> layer(layer_param);
-//    this->blob_bottom_rois_->mutable_cpu_data()[0] = 0;
-//    this->blob_bottom_rois_->mutable_cpu_data()[1] = 0;
-//    this->blob_bottom_rois_->mutable_cpu_data()[2] = 0;
-//    this->blob_bottom_rois_->mutable_cpu_data()[3] = 3;
-//    this->blob_bottom_rois_->mutable_cpu_data()[4] = 3;
-//    this->blob_bottom_vec_.push_back(this->blob_bottom_rois_);
-//  GradientChecker<Dtype> checker(1e-2, 1e-2);
-//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-//      this->blob_top_vec_, 0);
-//}
+TYPED_TEST(PSROIAlignLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PSROIPoolingParameter* psroi_pooling_param = layer_param.mutable_psroi_pooling_param();
+  psroi_pooling_param->set_group_size(2);
+  psroi_pooling_param->set_output_dim(1);
+  psroi_pooling_param->set_spatial_scale(1);
+  PSROIAlignLayer<Dtype> layer(layer_param);
+    this->blob_bottom_rois_->mutable_cpu_data()[0] = 0;
+    this->blob_bottom_rois_->mutable_cpu_data()[1] = 0;
+    this->blob_bottom_rois_->mutable_cpu_data()[2] = 0;
+    this->blob_bottom_rois_->mutable_cpu_data()[3] = 3;
+    this->blob_bottom_rois_->mutable_cpu_data()[4] = 3;
+    this->blob_bottom_vec_.push_back(this->blob_bottom_rois_);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+}
 
 }  // namespace caffe
