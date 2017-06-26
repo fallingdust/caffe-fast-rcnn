@@ -157,12 +157,6 @@ namespace caffe {
       Dtype* offset_bottom_diff = bottom_diff +
         (roi_batch_ind * channels + c) * height * width;
       Dtype diff_val = is_empty ? 0. : top_diff[index] / 4;
-//      for (int h = hstart; h < hend; ++h) {
-//        for (int w = wstart; w < wend; ++w) {
-//          int bottom_index = h*width + w;
-//          caffe_gpu_atomic_add(diff_val, offset_bottom_diff + bottom_index);
-//        }
-//      }
       // Selecting four regular locations for bilinear interpolation
       for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
         for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
@@ -181,12 +175,6 @@ namespace caffe {
           int top_right_index = y_top * width + x_right;
           int bottom_left_index = y_bottom * width + x_left;
           int bottom_right_index = y_bottom * width + x_right;
-
-          Dtype val = 0;
-          val += (1 - w + x_left) * (1 - y_top + h) * bottom_data[top_left_index];
-          val += (1 - x_right + w) * (1 - y_top + h) * bottom_data[top_right_index];
-          val += (1 - w + x_left) * (1 - h + y_bottom) * bottom_data[bottom_left_index];
-          val += (1 - x_right + w) * (1 - h + y_bottom) * bottom_data[bottom_right_index];
 
           caffe_gpu_atomic_add(diff_val * (x_right - w) * (y_bottom - h), offset_bottom_diff + top_left_index);
           caffe_gpu_atomic_add(diff_val * (w - x_left) * (y_bottom - h), offset_bottom_diff + top_right_index);
