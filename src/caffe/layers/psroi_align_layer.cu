@@ -36,13 +36,13 @@ namespace caffe {
 
       bottom_rois += n * 5;
       int roi_batch_ind = bottom_rois[0];
-      Dtype roi_start_w = min(max(bottom_rois[1] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
-      Dtype roi_start_h = min(max(bottom_rois[2] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
-      Dtype roi_end_w = min(max(bottom_rois[3] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
-      Dtype roi_end_h = min(max(bottom_rois[4] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
+      Dtype roi_start_w = bottom_rois[1] * spatial_scale;
+      Dtype roi_start_h = bottom_rois[2] * spatial_scale;
+      Dtype roi_end_w = bottom_rois[3] * spatial_scale;
+      Dtype roi_end_h = bottom_rois[4] * spatial_scale;
 
       Dtype roi_width = roi_end_w - roi_start_w;
-      Dtype roi_height =roi_end_h - roi_start_h;
+      Dtype roi_height = roi_end_h - roi_start_h;
 
       Dtype bin_size_h = roi_height / static_cast<Dtype>(pooled_height);
       Dtype bin_size_w = roi_width / static_cast<Dtype>(pooled_width);
@@ -62,7 +62,13 @@ namespace caffe {
       Dtype out_sum = 0;
       // Selecting four regular locations for bilinear interpolation
       for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+        if (h < 0 || h > height - 1) {
+          continue;
+        }
         for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+          if (w < 0 || w > width - 1) {
+            continue;
+          }
           int x_left = floor(w);
           int x_right = ceil(w);
           if (x_right == x_left) {
@@ -134,10 +140,10 @@ namespace caffe {
 
       bottom_rois += n * 5;
       int roi_batch_ind = bottom_rois[0];
-      Dtype roi_start_w = min(max(bottom_rois[1] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
-      Dtype roi_start_h = min(max(bottom_rois[2] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
-      Dtype roi_end_w = min(max(bottom_rois[3] * spatial_scale, Dtype(0)), static_cast<Dtype>(width - 1));
-      Dtype roi_end_h = min(max(bottom_rois[4] * spatial_scale, Dtype(0)), static_cast<Dtype>(height - 1));
+      Dtype roi_start_w = bottom_rois[1] * spatial_scale;
+      Dtype roi_start_h = bottom_rois[2] * spatial_scale;
+      Dtype roi_end_w = bottom_rois[3] * spatial_scale;
+      Dtype roi_end_h = bottom_rois[4] * spatial_scale;
 
       Dtype roi_width = roi_end_w - roi_start_w;
       Dtype roi_height = roi_end_h - roi_start_h;
@@ -159,7 +165,13 @@ namespace caffe {
       Dtype diff_val = is_empty ? 0. : top_diff[index] / 4;
       // Selecting four regular locations for bilinear interpolation
       for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+        if (h < 0 || h > height - 1) {
+          continue;
+        }
         for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+          if (w < 0 || w > width - 1) {
+            continue;
+          }
           int x_left = floor(w);
           int x_right = ceil(w);
           if (x_right == x_left) {
