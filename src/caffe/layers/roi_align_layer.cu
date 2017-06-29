@@ -45,11 +45,11 @@ __global__ void ROIAlignForward(const int nthreads, const Dtype* bottom_data,
     bool is_empty = true;
     // Selecting four regular locations for bilinear interpolation
     for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
-      if (h < 0 || h > height_ - 1) {
+      if (h < 0 || h > height - 1) {
         continue;
       }
       for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
-        if (w < 0 || w > width_ - 1) {
+        if (w < 0 || w > width - 1) {
           continue;
         }
         is_empty = false;
