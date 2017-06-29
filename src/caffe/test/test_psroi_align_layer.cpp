@@ -25,6 +25,7 @@ using boost::scoped_ptr;
 
 namespace caffe {
 
+#ifndef CPU_ONLY
 template <typename TypeParam>
 class PSROIAlignLayerTest : public GPUDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
@@ -102,5 +103,5 @@ TYPED_TEST(PSROIAlignLayerTest, TestGradient) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);
 }
-
+#endif
 }  // namespace caffe
