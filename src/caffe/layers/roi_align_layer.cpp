@@ -87,17 +87,21 @@ void ROIAlignLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           // Compute pooling region for this output unit:
           Dtype hstart = static_cast<Dtype>(ph) * bin_size_h + roi_start_h;
           Dtype wstart = static_cast<Dtype>(pw) * bin_size_w + roi_start_w;
-          Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h + roi_start_h;
-          Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w + roi_start_w;
+          // Dtype hend = static_cast<Dtype>(ph + 1) * bin_size_h + roi_start_h;
+          // Dtype wend = static_cast<Dtype>(pw + 1) * bin_size_w + roi_start_w;
 
           const int pool_index = ph * pooled_width_ + pw;
           bool is_empty = true;
           // Selecting four regular locations for bilinear interpolation
-          for (Dtype h = hstart + bin_size_h / Dtype(4); h < hend; h += bin_size_h / Dtype(2)) {
+          Dtype h = hstart - bin_size_h / Dtype(4);
+          for (int i = 0; i < 2; i++) {
+            h += bin_size_h / Dtype(2);
             if (h < 0 || h > height_ - 1) {
               continue;
             }
-            for (Dtype w = wstart + bin_size_w / Dtype(4); w < wend; w += bin_size_w / Dtype(2)) {
+            Dtype w = wstart - bin_size_w / Dtype(4);
+            for (int j = 0; j < 2; j++) {
+              w += bin_size_w / Dtype(2);
               if (w < 0 || w > width_ - 1) {
                 continue;
               }
