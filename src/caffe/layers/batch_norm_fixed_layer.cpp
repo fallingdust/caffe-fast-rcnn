@@ -108,7 +108,7 @@ void BatchNormFixedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // normalize variance
   caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
-  caffe_powx(variance_.count(), variance_.cpu_data(), Dtype(0.5),
+  caffe_sqrt(variance_.count(), variance_.cpu_data(),
              variance_.mutable_cpu_data());
 
   Blob<Dtype> temp(bottom[0]->shape());

@@ -36,7 +36,7 @@ void BatchNormFixedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   // normalize variance
   caffe_gpu_add_scalar(variance_.count(), eps_, variance_.mutable_gpu_data());
-  caffe_gpu_powx(variance_.count(), variance_.gpu_data(), Dtype(0.5),
+  caffe_gpu_sqrt(variance_.count(), variance_.gpu_data(),
       variance_.mutable_gpu_data());
 
   Blob<Dtype> temp(bottom[0]->shape());
