@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/deformable_im2col.h"
+#include "../../../src/caffe/util/deformable_im2col.cpp"
 
 namespace caffe {
 
