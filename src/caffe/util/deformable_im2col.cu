@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/util/deformable_im2col.hpp"
-
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -213,12 +213,12 @@ __global__ void deformable_im2col_gpu_kernel(const int n, const DType* data_im, 
  * \param data_col column buffer pointer
  */
 template <typename DType>
-inline void deformable_im2col(
+void deformable_im2col_gpu(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride, const int* dilation, 
-  const uint32_t deformable_group, DType* data_col) {
+  const int deformable_group, DType* data_col) {
   // num_axes should be smaller than block size
   CHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
   int channel_per_deformable_group = im_shape[1] / deformable_group;
@@ -238,6 +238,19 @@ inline void deformable_im2col(
   }
 }
 
+// Explicit instantiation
+template void deformable_im2col_gpu<float>(
+  const float* data_im, const float* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride, const int* dilation, 
+  const int deformable_group, float* data_col);
+template void deformable_im2col_gpu<double>(
+  const double* data_im, const double* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride, const int* dilation, 
+  const int deformable_group, double* data_col);
 
 /*!
 * \brief deformable_col2im gpu kernel.
@@ -308,12 +321,12 @@ __global__ void deformable_col2im_gpu_kernel(const int n, const DType* data_col,
  * \param grad_im pointer of a image (C, H, W,...) in the image batch
  */
 template <typename DType>
-inline void deformable_col2im(
+void deformable_col2im_gpu(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group,
+  const int* dilation, const int deformable_group,
   DType* grad_im) {
   int channel_per_deformable_group = im_shape[1] / deformable_group;
   //int num_kernels = col_shape.ProdShape(0, col_shape.ndim());
@@ -336,6 +349,21 @@ inline void deformable_col2im(
   }
 }
 
+// Explicit instantiation
+template void deformable_col2im_gpu<float>(
+  const float* data_col, const float* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride,
+  const int* dilation, const int deformable_group,
+  float* grad_im);
+template void deformable_col2im_gpu<double>(
+  const double* data_col, const double* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride,
+  const int* dilation, const int deformable_group,
+  double* grad_im);
 
 /*!
  * \brief deformable_col2im_coord gpu kernel.
@@ -413,12 +441,12 @@ __global__ void deformable_col2im_coord_gpu_kernel(const int n, const DType* dat
  * \param grad_offset pointer of the offset (C, H, W,...) in the offset batch
  */
 template <typename DType>
-inline void deformable_col2im_coord(
+void deformable_col2im_coord_gpu(
   const DType* data_col, const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group, DType* grad_offset) {
+  const int* dilation, const int deformable_group, DType* grad_offset) {
   //int num_kernels = col_shape[1] * col_shape[2] * 2 * kernel_shape[0] * kernel_shape[1] * deformable_group;
   int channel_per_deformable_group = col_shape[0] / deformable_group;
   // num_axes should be smaller than block size
@@ -440,6 +468,20 @@ inline void deformable_col2im_coord(
       << num_spatial_axes << " spatial axes";
   }
 }
+
+// Explicit instantiation
+template void deformable_col2im_coord_gpu<float>(
+  const float* data_col, const float* data_im, const float* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride,
+  const int* dilation, const int deformable_group, float* grad_offset);
+template void deformable_col2im_coord_gpu<double>(
+  const double* data_col, const double* data_im, const double* data_offset,
+  const int num_spatial_axes, const int num_kernels,
+  const int* im_shape, const int* col_shape, const int* kernel_shape,
+  const int* pad, const int* stride,
+  const int* dilation, const int deformable_group, double* grad_offset);
 
 
 }  // namespace caffe

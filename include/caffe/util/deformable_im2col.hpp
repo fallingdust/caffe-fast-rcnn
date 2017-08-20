@@ -58,13 +58,13 @@
  * \author Yuwen Xiong, Haozhi Qi, Jifeng Dai
  */
 
-#ifndef CAFFE_DEFORMABLE_IM2COL_HPP_
-#define CAFFE_DEFORMABLE_IM2COL_HPP_
+#ifndef _CAFFE_UTIL_DEFORMABLE_IM2COL_HPP_
+#define _CAFFE_UTIL_DEFORMABLE_IM2COL_HPP_
 
 namespace caffe {
 
 template <typename DType>
-inline void deformable_im2col(
+void deformable_im2col_cpu(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -72,7 +72,7 @@ inline void deformable_im2col(
   const int deformable_group, DType* data_col);
 
 template <typename DType>
-inline void deformable_col2im(
+void deformable_col2im_cpu(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -81,41 +81,37 @@ inline void deformable_col2im(
   DType* grad_im);
 
 template <typename DType>
-inline void deformable_col2im_coord(
+void deformable_col2im_coord_cpu(
   const DType* data_col, const DType* data_im, const DType* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group, DType* grad_offset);
 
-}
-
-#ifndef CPU_ONLY
-
 template <typename DType>
-inline void deformable_im2col(
+void deformable_im2col_gpu(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride, const int* dilation,
-  const uint32_t deformable_group, DType* data_col);
+  const int deformable_group, DType* data_col);
 
 template <typename DType>
-inline void deformable_col2im(
+void deformable_col2im_gpu(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group,
+  const int* dilation, const int deformable_group,
   DType* grad_im);
 
 template <typename DType>
-inline void deformable_col2im_coord(
+void deformable_col2im_coord_gpu(
   const DType* data_col, const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group, DType* grad_offset);
+  const int* dilation, const int deformable_group, DType* grad_offset);
 
-#endif //CPU_ONLY
+}  // namespace caffe
 
-#endif //CAFFE_DEFORMABLE_IM2COL_HPP_
+#endif // _CAFFE_UTIL_DEFORMABLE_IM2COL_HPP_

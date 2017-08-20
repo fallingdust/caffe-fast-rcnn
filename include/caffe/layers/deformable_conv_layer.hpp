@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "../../../src/caffe/util/deformable_im2col.cpp"
+#include "caffe/util/deformable_im2col.hpp"
 
 namespace caffe {
 
@@ -55,6 +55,16 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual void compute_output_shape();
   void reshape_variables(const Blob<Dtype>* bottom, const Blob<Dtype>* offset, const Blob<Dtype>* top);
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
@@ -111,48 +121,38 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
   int num_output_;
   bool bias_term_;
 
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void compute_output_shape();
-
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, const Dtype* offset, Dtype* col_buff) {
-    deformable_im2col(data, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
+    deformable_im2col_cpu(data, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
                       col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                       pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, col_buff);
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, const Dtype* offset, Dtype* data_grad) {
-    deformable_col2im(col_buff, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
+    deformable_col2im_cpu(col_buff, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
                       col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                       pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, data_grad);
   }
   inline void conv_col2im_coord_cpu(const Dtype* col_buff, const Dtype* data, const Dtype* offset, Dtype* offset_grad) {
-    deformable_col2im_coord(col_buff, data, offset, conv_input_shape_.cpu_data(),
+    deformable_col2im_coord_cpu(col_buff, data, offset, conv_input_shape_.cpu_data(),
                             col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                             pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, offset_grad);
   }
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, const Dtype* offset, Dtype* col_buff) {
-    deformable_im2col(data, offset, num_spatial_axes_, num_kernels_im2col_,
+    deformable_im2col_gpu(data, offset, num_spatial_axes_, num_kernels_im2col_,
                       conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
                       kernel_shape_.gpu_data(), pad_.gpu_data(),
                       stride_.gpu_data(), dilation_.gpu_data(), deformable_group_, col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, const Dtype* offset, Dtype* data_grad) {
-    deformable_col2im(col_buff, offset, num_spatial_axes_, num_kernels_col2im_,
+    deformable_col2im_gpu(col_buff, offset, num_spatial_axes_, num_kernels_col2im_,
                       conv_input_shape_.cpu_data(), col_buffer_shape_.data(),
                       kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(),
                       deformable_group_, data_grad);
   }
   inline void conv_col2im_coord_gpu(const Dtype* col_buff, const Dtype* data, const Dtype* offset, Dtype* offset_grad) {
-    deformable_col2im_coord(col_buff, data, offset, num_spatial_axes_, num_kernels_col2im_coord_,
+    deformable_col2im_coord_gpu(col_buff, data, offset, num_spatial_axes_, num_kernels_col2im_coord_,
                             conv_input_shape_.cpu_data(), col_buffer_shape_.data(),
                             kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(),
                             deformable_group_, offset_grad);
@@ -172,13 +172,6 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
 };
-
-#ifdef CPU_ONLY
-STUB_GPU(DeformableConvolutionLayer);
-#endif
-
-INSTANTIATE_CLASS(DeformableConvolutionLayer);
-REGISTER_LAYER_CLASS(DeformableConvolution);
 
 }  // namespace caffe
 
