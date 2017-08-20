@@ -142,7 +142,7 @@ inline void deformable_col2im_coord(
 }
 
 }  // namespace caffe
-#ifdef __CUDACC__
+#ifndef CPU_ONLY
 #include "./deformable_im2col.cuh"
 #endif
 #endif  // _CAFFE_UTIL_DEFORMABLE_IM2COL_H_

@@ -284,8 +284,8 @@ inline void deformable_im2col(
   const uint32_t deformable_group, DType* data_col) {
   // num_axes should be smaller than block size
   CHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
-  index_t channel_per_deformable_group = im_shape[1] / deformable_group;
-  //index_t num_kernels = im_shape[1] * col_shape.ProdShape(1, col_shape.ndim());
+  int channel_per_deformable_group = im_shape[1] / deformable_group;
+  //int num_kernels = im_shape[1] * col_shape.ProdShape(1, col_shape.ndim());
   switch (num_spatial_axes) {
   case 2:
     deformable_im2col_gpu_kernel<DType> // NOLINT_NEXT_LINE(whitespace/operators)
@@ -378,17 +378,16 @@ inline void deformable_col2im(
   const int* pad, const int* stride,
   const int* dilation, const uint32_t deformable_group,
   DType* grad_im) {
-  index_t channel_per_deformable_group = im_shape[1] / deformable_group;
-  //index_t num_kernels = col_shape.ProdShape(0, col_shape.ndim());
+  int channel_per_deformable_group = im_shape[1] / deformable_group;
+  //int num_kernels = col_shape.ProdShape(0, col_shape.ndim());
   // num_axes should be smaller than block size
   CHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
-  using namespace mxnet_op;
   switch (num_spatial_axes) {
   case 2:
     // To avoid involving atomic operations, we will launch one kernel per
     // bottom dimension, and then in the kernel add up the top dimensions.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    deformable_col2im_gpu_kernel<DType><<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+    deformable_col2im_gpu_kernel<DType> <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
         num_kernels, data_col, data_offset, im_shape[1], im_shape[2], im_shape[3],
         kernel_shape[0], kernel_shape[1], pad[0], pad[1], stride[0], stride[1],
         dilation[0], dilation[1], channel_per_deformable_group, col_shape[1], col_shape[2], grad_im);
@@ -483,9 +482,8 @@ inline void deformable_col2im_coord(
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const uint32_t deformable_group, DType* grad_offset) {
-  index_t num_spatial_axes = kernel_shape.ndim();
-  //index_t num_kernels = col_shape[1] * col_shape[2] * 2 * kernel_shape[0] * kernel_shape[1] * deformable_group;
-  index_t channel_per_deformable_group = col_shape[0] / deformable_group;
+  //int num_kernels = col_shape[1] * col_shape[2] * 2 * kernel_shape[0] * kernel_shape[1] * deformable_group;
+  int channel_per_deformable_group = col_shape[0] / deformable_group;
   // num_axes should be smaller than block size
   CHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
   switch (num_spatial_axes) {
