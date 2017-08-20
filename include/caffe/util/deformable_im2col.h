@@ -87,7 +87,7 @@ inline void deformable_im2col(
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride, const int* dilation, 
-  const uint32_t deformable_group, DType* data_col) {
+  const int deformable_group, DType* data_col) {
 	  LOG(FATAL) << "not implemented";
 }
 
@@ -111,7 +111,7 @@ inline void deformable_col2im(
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group,
+  const int* dilation, const int deformable_group,
   DType* grad_im) {
   LOG(FATAL) << "not implemented";
 }
@@ -137,7 +137,7 @@ inline void deformable_col2im_coord(
   const DType* data_col, const DType* data_im, const DType* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
-  const int* dilation, const uint32_t deformable_group, DType* grad_offset) {
+  const int* dilation, const int deformable_group, DType* grad_offset) {
   LOG(FATAL) << "not implemented";
 }
 
