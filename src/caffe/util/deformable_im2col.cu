@@ -146,7 +146,7 @@ __device__ DType get_coordinate_weight(DType argmax_h, DType argmax_w,
  * DO NOT call this directly. Use wrapper function im2col() instead;
  */
 template <typename DType>
-__global__ void deformable_im2col_gpu_kernel(const int n, const DType* data_im, const DType* data_offset,
+__global__ void deformable_im2col_kernel(const int n, const DType* data_im, const DType* data_offset,
   const int height, const int width, const int kernel_h, const int kernel_w,
   const int pad_h, const int pad_w,
   const int stride_h, const int stride_w,
@@ -213,7 +213,7 @@ __global__ void deformable_im2col_gpu_kernel(const int n, const DType* data_im, 
  * \param data_col column buffer pointer
  */
 template <typename DType>
-void deformable_im2col_gpu(
+void deformable_im2col(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -225,7 +225,7 @@ void deformable_im2col_gpu(
   //int num_kernels = im_shape[1] * col_shape.ProdShape(1, col_shape.ndim());
   switch (num_spatial_axes) {
   case 2:
-    deformable_im2col_gpu_kernel<DType> // NOLINT_NEXT_LINE(whitespace/operators)
+    deformable_im2col_kernel<DType> // NOLINT_NEXT_LINE(whitespace/operators)
         <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
         num_kernels, data_im, data_offset, im_shape[2], im_shape[3], kernel_shape[0], kernel_shape[1],
         pad[0], pad[1], stride[0], stride[1], dilation[0], dilation[1], channel_per_deformable_group,
@@ -233,19 +233,19 @@ void deformable_im2col_gpu(
     CUDA_POST_KERNEL_CHECK;
     break;
   default:
-    LOG(FATAL) << "im2col_nd_gpu does not support computation with "
+    LOG(FATAL) << "im2col_nd does not support computation with "
                << num_spatial_axes << " spatial axes";
   }
 }
 
 // Explicit instantiation
-template void deformable_im2col_gpu<float>(
+template void deformable_im2col<float>(
   const float* data_im, const float* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride, const int* dilation, 
   const int deformable_group, float* data_col);
-template void deformable_im2col_gpu<double>(
+template void deformable_im2col<double>(
   const double* data_im, const double* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -257,7 +257,7 @@ template void deformable_im2col_gpu<double>(
 * \brief DO NOT call this directly. Use wrapper function deformable_col2im() instead;
 */
 template <typename DType>
-__global__ void deformable_col2im_gpu_kernel(const int n, const DType* data_col, const DType* data_offset,
+__global__ void deformable_col2im_kernel(const int n, const DType* data_col, const DType* data_offset,
   const int channels, const int height, const int width,
   const int kernel_h, const int kernel_w,
   const int pad_h, const int pad_w,
@@ -321,7 +321,7 @@ __global__ void deformable_col2im_gpu_kernel(const int n, const DType* data_col,
  * \param grad_im pointer of a image (C, H, W,...) in the image batch
  */
 template <typename DType>
-void deformable_col2im_gpu(
+void deformable_col2im(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -337,27 +337,27 @@ void deformable_col2im_gpu(
     // To avoid involving atomic operations, we will launch one kernel per
     // bottom dimension, and then in the kernel add up the top dimensions.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    deformable_col2im_gpu_kernel<DType> <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+    deformable_col2im_kernel<DType> <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
         num_kernels, data_col, data_offset, im_shape[1], im_shape[2], im_shape[3],
         kernel_shape[0], kernel_shape[1], pad[0], pad[1], stride[0], stride[1],
         dilation[0], dilation[1], channel_per_deformable_group, col_shape[1], col_shape[2], grad_im);
     CUDA_POST_KERNEL_CHECK;
     break;
   default:
-    LOG(FATAL) << "col2im_nd_gpu does not support computation with "
+    LOG(FATAL) << "col2im_nd does not support computation with "
                << num_spatial_axes << " spatial axes";
   }
 }
 
 // Explicit instantiation
-template void deformable_col2im_gpu<float>(
+template void deformable_col2im<float>(
   const float* data_col, const float* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group,
   float* grad_im);
-template void deformable_col2im_gpu<double>(
+template void deformable_col2im<double>(
   const double* data_col, const double* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -370,7 +370,7 @@ template void deformable_col2im_gpu<double>(
  * \brief DO NOT call this directly. Use wrapper function deformable_col2im_coord() instead;
  */
 template <typename DType>
-__global__ void deformable_col2im_coord_gpu_kernel(const int n, const DType* data_col, 
+__global__ void deformable_col2im_coord_kernel(const int n, const DType* data_col, 
   const DType* data_im, const DType* data_offset,
   const int channels, const int height, const int width,
   const int kernel_h, const int kernel_w,
@@ -441,7 +441,7 @@ __global__ void deformable_col2im_coord_gpu_kernel(const int n, const DType* dat
  * \param grad_offset pointer of the offset (C, H, W,...) in the offset batch
  */
 template <typename DType>
-void deformable_col2im_coord_gpu(
+void deformable_col2im_coord(
   const DType* data_col, const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -457,26 +457,26 @@ void deformable_col2im_coord_gpu(
     // bottom dimension, and then in the kernel add up the top dimensions.
     // NOLINT_NEXT_LINE(whitespace/operators)
 
-    deformable_col2im_coord_gpu_kernel<DType> <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+    deformable_col2im_coord_kernel<DType> <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
         num_kernels, data_col, data_im, data_offset, im_shape[1], im_shape[2], im_shape[3],
         kernel_shape[0], kernel_shape[1], pad[0], pad[1], stride[0], stride[1],
         dilation[0], dilation[1], channel_per_deformable_group, col_shape[1], col_shape[2], grad_offset);
     CUDA_POST_KERNEL_CHECK;
     break;
   default:
-    LOG(FATAL) << "col2im_nd_gpu does not support computation with "
+    LOG(FATAL) << "col2im_nd does not support computation with "
       << num_spatial_axes << " spatial axes";
   }
 }
 
 // Explicit instantiation
-template void deformable_col2im_coord_gpu<float>(
+template void deformable_col2im_coord<float>(
   const float* data_col, const float* data_im, const float* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group, float* grad_offset);
-template void deformable_col2im_coord_gpu<double>(
+template void deformable_col2im_coord<double>(
   const double* data_col, const double* data_im, const double* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,

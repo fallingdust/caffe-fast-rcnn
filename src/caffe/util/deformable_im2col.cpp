@@ -17,7 +17,7 @@ namespace caffe {
  * \param data_col column buffer pointer
  */
 template <typename DType>
-void deformable_im2col_cpu(
+void deformable_im2col(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -27,13 +27,13 @@ void deformable_im2col_cpu(
 }
 
 // Explicit instantiation
-template void deformable_im2col_cpu<float>(
+template void deformable_im2col<float>(
   const float* data_im, const float* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride, const int* dilation, 
   const int deformable_group, float* data_col);
-template void deformable_im2col_cpu<double>(
+template void deformable_im2col<double>(
   const double* data_im, const double* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -55,7 +55,7 @@ template void deformable_im2col_cpu<double>(
  * \param grad_im pointer of a image (C, H, W,...) in the image batch
  */
 template <typename DType>
-void deformable_col2im_cpu(
+void deformable_col2im(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -66,14 +66,14 @@ void deformable_col2im_cpu(
 }
 
 // Explicit instantiation
-template void deformable_col2im_cpu<float>(
+template void deformable_col2im<float>(
   const float* data_col, const float* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group,
   float* grad_im);
-template void deformable_col2im_cpu<double>(
+template void deformable_col2im<double>(
   const double* data_col, const double* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -97,7 +97,7 @@ template void deformable_col2im_cpu<double>(
  */
 
 template <typename DType>
-void deformable_col2im_coord_cpu(
+void deformable_col2im_coord(
   const DType* data_col, const DType* data_im, const DType* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
@@ -106,12 +106,12 @@ void deformable_col2im_coord_cpu(
 }
 
 // Explicit instantiation
-template void deformable_col2im_coord_cpu<float>(
+template void deformable_col2im_coord<float>(
   const float* data_col, const float* data_im, const float* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group, float* grad_offset);
-template void deformable_col2im_coord_cpu<double>(
+template void deformable_col2im_coord<double>(
   const double* data_col, const double* data_im, const double* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,

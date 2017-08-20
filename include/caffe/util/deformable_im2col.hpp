@@ -64,7 +64,7 @@
 namespace caffe {
 
 template <typename DType>
-void deformable_im2col_cpu(
+void deformable_im2col(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -72,7 +72,7 @@ void deformable_im2col_cpu(
   const int deformable_group, DType* data_col);
 
 template <typename DType>
-void deformable_col2im_cpu(
+void deformable_col2im(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -81,14 +81,14 @@ void deformable_col2im_cpu(
   DType* grad_im);
 
 template <typename DType>
-void deformable_col2im_coord_cpu(
+void deformable_col2im_coord(
   const DType* data_col, const DType* data_im, const DType* data_offset, const int* im_shape,
   const int* col_shape, const int* kernel_shape,
   const int* pad, const int* stride,
   const int* dilation, const int deformable_group, DType* grad_offset);
 
 template <typename DType>
-void deformable_im2col_gpu(
+void deformable_im2col(
   const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -96,7 +96,7 @@ void deformable_im2col_gpu(
   const int deformable_group, DType* data_col);
 
 template <typename DType>
-void deformable_col2im_gpu(
+void deformable_col2im(
   const DType* data_col, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,
@@ -105,7 +105,7 @@ void deformable_col2im_gpu(
   DType* grad_im);
 
 template <typename DType>
-void deformable_col2im_coord_gpu(
+void deformable_col2im_coord(
   const DType* data_col, const DType* data_im, const DType* data_offset,
   const int num_spatial_axes, const int num_kernels,
   const int* im_shape, const int* col_shape, const int* kernel_shape,

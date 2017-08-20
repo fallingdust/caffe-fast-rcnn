@@ -124,35 +124,35 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, const Dtype* offset, Dtype* col_buff) {
-    deformable_im2col_cpu(data, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
+    deformable_im2col(data, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
                       col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                       pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, col_buff);
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, const Dtype* offset, Dtype* data_grad) {
-    deformable_col2im_cpu(col_buff, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
+    deformable_col2im(col_buff, offset, num_spatial_axes_, conv_input_shape_.cpu_data(),
                       col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                       pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, data_grad);
   }
   inline void conv_col2im_coord_cpu(const Dtype* col_buff, const Dtype* data, const Dtype* offset, Dtype* offset_grad) {
-    deformable_col2im_coord_cpu(col_buff, data, offset, conv_input_shape_.cpu_data(),
+    deformable_col2im_coord(col_buff, data, offset, conv_input_shape_.cpu_data(),
                             col_buffer_shape_.data(), kernel_shape_.cpu_data(),
                             pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, offset_grad);
   }
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, const Dtype* offset, Dtype* col_buff) {
-    deformable_im2col_gpu(data, offset, num_spatial_axes_, num_kernels_im2col_,
+    deformable_im2col(data, offset, num_spatial_axes_, num_kernels_im2col_,
                       conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
                       kernel_shape_.gpu_data(), pad_.gpu_data(),
                       stride_.gpu_data(), dilation_.gpu_data(), deformable_group_, col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, const Dtype* offset, Dtype* data_grad) {
-    deformable_col2im_gpu(col_buff, offset, num_spatial_axes_, num_kernels_col2im_,
+    deformable_col2im(col_buff, offset, num_spatial_axes_, num_kernels_col2im_,
                       conv_input_shape_.cpu_data(), col_buffer_shape_.data(),
                       kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(),
                       deformable_group_, data_grad);
   }
   inline void conv_col2im_coord_gpu(const Dtype* col_buff, const Dtype* data, const Dtype* offset, Dtype* offset_grad) {
-    deformable_col2im_coord_gpu(col_buff, data, offset, num_spatial_axes_, num_kernels_col2im_coord_,
+    deformable_col2im_coord(col_buff, data, offset, num_spatial_axes_, num_kernels_col2im_coord_,
                             conv_input_shape_.cpu_data(), col_buffer_shape_.data(),
                             kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(),
                             deformable_group_, offset_grad);
