@@ -245,7 +245,7 @@ void DeformableConvolutionLayer<Dtype>::reshape_variables(const Blob<Dtype>* bot
   top_dim_ = top->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
   num_kernels_col2im_ = col_buffer_.count();
-  num_kernels_col2im_coord_ = 2 * col_offset_ * deformable_group_;
+  num_kernels_col2im_coord_ = conv_out_spatial_dim_ * 2 * kernel_shape_.cpu_data()[0] * kernel_shape_.cpu_data()[1] * deformable_group_;
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   out_spatial_dim_ = top->count(first_spatial_axis);
   if (bias_term_) {
@@ -324,9 +324,9 @@ void DeformableConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>&
               top_diff + n * top_dim_, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
-        if (propagate_down[2 * i] && propagate_down[2 * i + 1]) {
+        if (propagate_down[2 * i] || propagate_down[2 * i + 1]) {
           backward_cpu_gemm(top_diff + n * top_dim_, bottom_data + n * bottom_dim_, offset_data + n * offset_dim_, weight,
-              bottom_diff + n * bottom_dim_, offset_diff + n * offset_dim_);
+              bottom_diff + n * bottom_dim_, offset_diff + n * offset_dim_, propagate_down[2 * i], propagate_down[2 * i + 1]);
         }
       }
     }
@@ -357,7 +357,7 @@ void DeformableConvolutionLayer<Dtype>::forward_cpu_bias(Dtype* output,
 
 template <typename Dtype>
 void DeformableConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output, const Dtype* input, const Dtype* offset,
-    const Dtype* weights, Dtype* data_grad, Dtype* offset_grad) {
+    const Dtype* weights, Dtype* input_grad, Dtype* offset_grad, bool input_propagate, bool offset_propagate) {
   Dtype* col_buff = col_buffer_.mutable_cpu_data();
   for (int g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
@@ -365,8 +365,12 @@ void DeformableConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output, c
         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
         (Dtype)0., col_buff + col_offset_ * g);
   }
-  conv_col2im_cpu(col_buff, offset, data_grad);
-  conv_col2im_coord_cpu(col_buff, input, offset, offset_grad);
+  if (input_propagate) {
+    conv_col2im_cpu(col_buff, offset, input_grad);
+  }
+  if (offset_propagate) {
+    conv_col2im_coord_cpu(col_buff, input, offset, offset_grad);
+  }
 }
 
 template <typename Dtype>
@@ -416,7 +420,7 @@ void DeformableConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output, const Dt
 
 template <typename Dtype>
 void DeformableConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output, const Dtype* input, const Dtype* offset,
-    const Dtype* weights, Dtype* data_grad, Dtype* offset_grad) {
+    const Dtype* weights, Dtype* input_grad, Dtype* offset_grad, bool input_propagate, bool offset_propagate) {
   Dtype* col_buff = col_buffer_.mutable_gpu_data();
   for (int g = 0; g < group_; ++g) {
     caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
@@ -424,8 +428,12 @@ void DeformableConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output, c
         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
         (Dtype)0., col_buff + col_offset_ * g);
   }
-  conv_col2im_gpu(col_buff, offset, data_grad);
-  conv_col2im_coord_gpu(col_buff, input, offset, offset_grad);
+  if (input_propagate) {
+    conv_col2im_gpu(col_buff, offset, input_grad);
+  }
+  if (offset_propagate) {
+    conv_col2im_coord_gpu(col_buff, input, offset, offset_grad);
+  }
 }
 
 template <typename Dtype>

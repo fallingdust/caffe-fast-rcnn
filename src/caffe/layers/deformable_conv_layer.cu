@@ -9,14 +9,14 @@ void DeformableConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& 
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); i += 2) {
-    const Dtype* bottom_data = bottom[i]->gpu_data();
+    const Dtype* input_data = bottom[i]->gpu_data();
     const Dtype* offset_data = bottom[i + 1]->gpu_data();
     Dtype* top_data = top[i / 2]->mutable_gpu_data();
     if (bottom.size() > 2) {
       reshape_variables(bottom[i], bottom[i + 1], top[i / 2]);
     }
     for (int n = 0; n < num_; ++n) {
-      forward_gpu_gemm(bottom_data + n * bottom_dim_, offset_data + n * offset_dim_, weight,
+      forward_gpu_gemm(input_data + n * bottom_dim_, offset_data + n * offset_dim_, weight,
           top_data + n * top_dim_);
       if (bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
@@ -43,21 +43,23 @@ void DeformableConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>&
         backward_gpu_bias(bias_diff, top_diff + n * top_dim_);
       }
     }
+    const Dtype* input_data = bottom[2 * i]->gpu_data();
+    const Dtype* offset_data = bottom[2 * i + 1]->gpu_data();
+    Dtype* bottom_diff = bottom[2 * i]->mutable_gpu_diff();
+    Dtype* offset_diff = bottom[2 * i + 1]->mutable_gpu_diff();
+    caffe_gpu_set(bottom[2 * i]->count(), Dtype(0.), bottom_diff);
+    caffe_gpu_set(bottom[2 * i + 1]->count(), Dtype(0.), offset_diff);
     if (this->param_propagate_down_[0] || propagate_down[i]) {
-      const Dtype* bottom_data = bottom[2 * i]->gpu_data();
-      const Dtype* offset_data = bottom[2 * i + 1]->gpu_data();
-      Dtype* bottom_diff = bottom[2 * i]->mutable_gpu_diff();
-      Dtype* offset_diff = bottom[2 * i + 1]->mutable_gpu_diff();
       for (int n = 0; n < num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          weight_gpu_gemm(bottom_data + n * bottom_dim_, offset_data + n * offset_dim_,
+          weight_gpu_gemm(input_data + n * bottom_dim_, offset_data + n * offset_dim_,
               top_diff + n * top_dim_, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
-        if (propagate_down[2 * i] && propagate_down[2 * i + 1]) {
-          backward_gpu_gemm(top_diff + n * top_dim_, bottom_data + n * bottom_dim_, offset_data + n * offset_dim_, weight,
-              bottom_diff + n * bottom_dim_, offset_diff + n * offset_dim_);
+        if (propagate_down[2 * i] || propagate_down[2 * i + 1]) {
+          backward_gpu_gemm(top_diff + n * top_dim_, input_data + n * bottom_dim_, offset_data + n * offset_dim_, weight,
+              bottom_diff + n * bottom_dim_, offset_diff + n * offset_dim_, propagate_down[2 * i], propagate_down[2 * i + 1]);
         }
       }
     }

@@ -72,7 +72,7 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
   void forward_cpu_gemm(const Dtype* input, const Dtype* offset, const Dtype* weights, Dtype* output);
   void forward_cpu_bias(Dtype* output, const Dtype* bias);
   void backward_cpu_gemm(const Dtype* output, const Dtype* input, const Dtype* offset, const Dtype* weights,
-                         Dtype* data_grad, Dtype* offset_grad);
+                         Dtype* input_grad, Dtype* offset_grad, bool input_propagate, bool offset_propagate);
   void weight_cpu_gemm(const Dtype* input, const Dtype* offset, const Dtype* output, Dtype* weights);
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
@@ -80,7 +80,7 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
   void forward_gpu_gemm(const Dtype* input, const Dtype* offset, const Dtype* weights, Dtype* output);
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
   void backward_gpu_gemm(const Dtype* output, const Dtype* input, const Dtype* offset, const Dtype* weights,
-                         Dtype* data_grad, Dtype* offset_grad);
+                         Dtype* input_grad, Dtype* offset_grad, bool input_propagate, bool offset_propagate);
   void weight_gpu_gemm(const Dtype* input, const Dtype* offset, const Dtype* output, Dtype* weights);
   void backward_gpu_bias(Dtype* bias, const Dtype* input);
 #endif
@@ -141,9 +141,9 @@ class DeformableConvolutionLayer : public Layer<Dtype> {
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, const Dtype* offset, Dtype* col_buff) {
     deformable_im2col(data, offset, num_spatial_axes_, num_kernels_im2col_,
-                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                      kernel_shape_.gpu_data(), pad_.gpu_data(),
-                      stride_.gpu_data(), dilation_.gpu_data(), deformable_group_, col_buff);
+                      conv_input_shape_.cpu_data(), col_buffer_shape_.data(),
+                      kernel_shape_.cpu_data(), pad_.cpu_data(),
+                      stride_.cpu_data(), dilation_.cpu_data(), deformable_group_, col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, const Dtype* offset, Dtype* data_grad) {
     deformable_col2im(col_buff, offset, num_spatial_axes_, num_kernels_col2im_,
